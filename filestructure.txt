@@ -1,0 +1,85 @@
+|-- .bolt
+    |-- config.json
+|-- .env
+|-- .expo
+    |-- devices.json
+    |-- README.md
+    |-- types
+        |-- router.d.ts
+|-- .gitignore
+|-- .npmrc
+|-- .prettierrc
+|-- app
+    |-- (tabs)
+        |-- community.tsx
+        |-- index.tsx
+        |-- orders.tsx
+        |-- profile.tsx
+        |-- shelf.tsx
+        |-- _layout.tsx
+    |-- +not-found.tsx
+    |-- auth
+        |-- login.tsx
+        |-- register.tsx
+        |-- _layout.tsx
+    |-- index.tsx
+    |-- _layout.tsx
+|-- app.json
+|-- assets
+    |-- images
+        |-- favicon.png
+        |-- icon.png
+|-- components
+    |-- StatusBadge.tsx
+|-- expo-env.d.ts
+|-- hooks
+    |-- useFrameworkReady.ts
+|-- package-lock.json
+|-- package.json
+|-- project.sln
+|-- server
+    |-- package.json
+    |-- README.md
+    |-- src
+        |-- app.js
+        |-- config
+            |-- auth.config.js
+            |-- db.js
+            |-- passport.js
+        |-- controllers
+            |-- authController.js
+            |-- dashboardController.js
+            |-- ordersController.js
+            |-- profileController.js
+            |-- shelfController.js
+            |-- supportController.js
+        |-- middlewares
+            |-- auth.middleware.js
+            |-- verifyAdmin.js
+            |-- verifyUser.js
+        |-- models
+            |-- Item.js
+            |-- Message.js
+            |-- Notification.js
+            |-- Order.js
+            |-- User.js
+        |-- routes
+            |-- authRoutes.js
+            |-- dashboardRoutes.js
+            |-- ordersRoutes.js
+            |-- profileRoutes.js
+            |-- shelfRoutes.js
+            |-- supportRoutes.js
+        |-- services
+            |-- authService.js
+            |-- dashboardService.js
+            |-- orderService.js
+            |-- profileService.js
+            |-- shelfService.js
+            |-- supportService.js
+|-- structure.py
+|-- tsconfig.json
+|-- types
+    |-- index.ts
+|-- utils
+    |-- constants.ts
