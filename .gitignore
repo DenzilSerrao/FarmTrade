@@ -4,9 +4,11 @@ node_modules/
 # expo
 .expo/
 dist/
+.bolt
+.vscode
 web-build/
 expo-env.d.ts
-
+.venv
 # native
 *.orig.*
 *.jks
