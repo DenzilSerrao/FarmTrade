@@ -5,25 +5,77 @@ const DashboardService = require('../services/dashboardService');
 const dashboardService = new DashboardService();
 
 // GET news
-router.get('/news', async (req, res) => {
+exports.getNews = async (req, res) => {
   try {
-    const news = await dashboardService.getNews();
-    res.status(200).json(news);
+    const userId = req.user?.id; // Optional user context for personalization
+    const news = await dashboardService.getNews(userId);
+    res.status(200).json({
+      success: true,
+      data: news
+    });
   } catch (error) {
     console.error('Error fetching news:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch news',
+      error: 'FETCH_NEWS_ERROR'
+    });
   }
-});
+};
 
 // GET sales analytics
-router.get('/sales-analytics', async (req, res) => {
+exports.getSalesAnalytics = async (req, res) => {
   try {
-    const analytics = await dashboardService.getSalesAnalytics();
-    res.status(200).json(analytics);
+    const userId = req.user.id;
+    const analytics = await dashboardService.getSalesAnalytics(userId);
+    res.status(200).json({
+      success: true,
+      data: analytics
+    });
   } catch (error) {
     console.error('Error fetching sales analytics:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch analytics',
+      error: 'FETCH_ANALYTICS_ERROR'
+    });
   }
-});
+};
 
-module.exports = router;
+// GET market data
+exports.getMarketData = async (req, res) => {
+  try {
+    const { region, crop } = req.query;
+    const marketData = await dashboardService.getMarketData(region, crop);
+    res.status(200).json({
+      success: true,
+      data: marketData
+    });
+  } catch (error) {
+    console.error('Error fetching market data:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch market data',
+      error: 'FETCH_MARKET_ERROR'
+    });
+  }
+};
+
+// GET dashboard summary
+exports.getDashboardSummary = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const summary = await dashboardService.getDashboardSummary(userId);
+    res.status(200).json({
+      success: true,
+      data: summary
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard summary:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch dashboard summary',
+      error: 'FETCH_SUMMARY_ERROR'
+    });
+  }
+};
