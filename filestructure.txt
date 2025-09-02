@@ -1,5 +1,3 @@
-|-- .bolt
-    |-- config.json
 |-- .env
 |-- .expo
     |-- devices.json
@@ -8809,7 +8807,10 @@
 |-- package.json
 |-- project.sln
 |-- server
+    |-- .env
+    |-- .env.example
     |-- CommodityAndCommodityHeads.csv
+    |-- package-lock.json
     |-- package.json
     |-- README.md
     |-- Script.py
@@ -8828,9 +8829,10 @@
             |-- supportController.js
         |-- middlewares
             |-- auth.middleware.js
-            |-- verifyAdmin.js
-            |-- verifyUser.js
+            |-- verifyAdmin.ts
+            |-- verifyUser.ts
         |-- models
+            |-- Admin.js
             |-- Item.js
             |-- Message.js
             |-- Notification.js

@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import Admin from '../routes/v1/admin/models/Admin';
+import Admin from '../models/Admin.js';
 
 const verifyAdmin = (req: any, res: any, next: any) => {
     try {
