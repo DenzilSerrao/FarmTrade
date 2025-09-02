@@ -8829,7 +8829,7 @@
             |-- supportController.js
         |-- middlewares
             |-- auth.middleware.js
-            |-- verifyAdmin.ts
+            |-- verifyAdmin.js
             |-- verifyUser.ts
         |-- models
             |-- Admin.js
