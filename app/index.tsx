@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { router, useRootNavigationState } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
+import { getStoredAuth } from '@/lib/auth';
 
 export default function IndexScreen() {
   const rootNavigationState = useRootNavigationState();
@@ -11,13 +12,14 @@ export default function IndexScreen() {
       return;
     }
 
-    // Simulate auth check - in production, check actual auth state
-    const isAuthenticated = false; // Replace with actual auth check
+    // Check actual auth state
+    const { token, user } = getStoredAuth();
+    const isAuthenticated = !!(token && user);
     
     if (isAuthenticated) {
       router.replace('/(tabs)');
     } else {
-      router.replace('/auth/login');
+      router.replace('/onboarding');
     }
   }, [rootNavigationState?.isLoaded]);
 

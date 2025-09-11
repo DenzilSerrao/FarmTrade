@@ -1,20 +1,4 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import config from '../config/auth.config.js';
-
-// Helper function to generate JWT
-const generateToken = (user) => {
-  return jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-      verified: user.verified,
-    },
-    config.jwt.secret,
-    { expiresIn: '24h' }
-  );
-};
+import AuthService from '../services/authService.js';
 
 // Login controller
 export const login = async (req, res) => {
@@ -29,55 +13,14 @@ export const login = async (req, res) => {
       });
     }
 
-    // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials',
-      });
-    }
+    const result = await AuthService.login(email, password);
 
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials',
-      });
-    }
-
-    // Check if email is verified
-    if (!user.verified) {
-      return res.status(401).json({
-        success: false,
-        message: 'Please verify your email before logging in',
-      });
-    }
-
-    // Generate token
-    const token = generateToken(user);
-
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
-
-    res.json({
-      success: true,
-      message: 'Login successful',
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        verified: user.verified,
-      },
-    });
+    res.json(result);
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: error.message || 'Internal server error',
     });
   }
 };
@@ -95,56 +38,14 @@ export const register = async (req, res) => {
       });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: 'User with this email already exists',
-      });
-    }
+    const result = await AuthService.register({ name, email, password });
 
-    // Hash password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create user
-    const user = new User({
-      name,
-      email,
-      password: hashedPassword,
-      verified: false,
-      createdAt: new Date(),
-    });
-
-    await user.save();
-
-    // Generate verification token
-    const verificationToken = jwt.sign(
-      { userId: user.id, email: user.email },
-      config.jwt.secret,
-      { expiresIn: '24h' }
-    );
-
-    // TODO: Send verification email here
-    console.log('Verification token:', verificationToken);
-
-    res.status(201).json({
-      success: true,
-      message:
-        'User registered successfully. Please check your email for verification.',
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        verified: user.verified,
-      },
-    });
+    res.status(201).json(result);
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({
+    res.status(400).json({
       success: false,
-      message: 'Internal server error',
+      message: error.message || 'Registration failed',
     });
   }
 };

@@ -1,17 +1,12 @@
-import express from 'express';
-const router = express.Router();
-import OrderService from '../services/orderService';
-import Order from '../models/Order';
-
-const orderService = new OrderService();
+import OrderService from '../services/orderService.js';
 
 // GET user's orders
-exports.getOrders = async (req, res) => {
+export const getOrders = async (req, res) => {
   try {
     const userId = req.user.id;
     const { status, page = 1, limit = 10 } = req.query;
 
-    const orders = await orderService.getUserOrders(userId, {
+    const orders = await OrderService.getUserOrders(userId, {
       status,
       page,
       limit,
@@ -31,12 +26,12 @@ exports.getOrders = async (req, res) => {
 };
 
 // GET specific order by ID
-exports.getOrderById = async (req, res) => {
+export const getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
     const userId = req.user.id;
 
-    const order = await orderService.getOrderById(orderId, userId);
+    const order = await OrderService.getOrderById(orderId, userId);
 
     if (!order) {
       return res.status(404).json({
@@ -61,7 +56,7 @@ exports.getOrderById = async (req, res) => {
 };
 
 // POST create new order
-exports.createOrder = async (req, res) => {
+export const createOrder = async (req, res) => {
   try {
     const userId = req.user.id;
     const orderData = {
@@ -78,7 +73,7 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    const createdOrder = await orderService.createOrder(orderData);
+    const createdOrder = await OrderService.createOrder(orderData);
 
     res.status(201).json({
       success: true,
@@ -96,13 +91,13 @@ exports.createOrder = async (req, res) => {
 };
 
 // PUT update order
-exports.updateOrder = async (req, res) => {
+export const updateOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
     const userId = req.user.id;
     const updateData = req.body;
 
-    const updatedOrder = await orderService.updateOrder(
+    const updatedOrder = await OrderService.updateOrder(
       orderId,
       userId,
       updateData
@@ -132,12 +127,12 @@ exports.updateOrder = async (req, res) => {
 };
 
 // DELETE cancel order
-exports.cancelOrder = async (req, res) => {
+export const cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
     const userId = req.user.id;
 
-    const cancelled = await orderService.cancelOrder(orderId, userId);
+    const cancelled = await OrderService.cancelOrder(orderId, userId);
 
     if (!cancelled) {
       return res.status(404).json({
@@ -162,12 +157,12 @@ exports.cancelOrder = async (req, res) => {
 };
 
 // GET order invoice
-exports.getOrderInvoice = async (req, res) => {
+export const getOrderInvoice = async (req, res) => {
   try {
     const { orderId } = req.params;
     const userId = req.user.id;
 
-    const invoice = await orderService.generateInvoice(orderId, userId);
+    const invoice = await OrderService.generateInvoice(orderId, userId);
 
     if (!invoice) {
       return res.status(404).json({
@@ -189,6 +184,15 @@ exports.getOrderInvoice = async (req, res) => {
       error: 'FETCH_INVOICE_ERROR',
     });
   }
+};
+
+const ordersController = {
+  getOrders,
+  getOrderById,
+  createOrder,
+  updateOrder,
+  cancelOrder,
+  getOrderInvoice,
 };
 
 export default ordersController;

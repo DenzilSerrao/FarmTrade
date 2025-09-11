@@ -403,4 +403,4 @@ class DashboardService {
   }
 }
 
-export default DashboardService;
+export default new DashboardService();

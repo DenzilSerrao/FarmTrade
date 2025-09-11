@@ -1,5 +1,6 @@
 import Order from '../models/Order.js';
 import Item from '../models/Item.js';
+import User from '../models/User.js';
 
 class OrderService {
   // Get user's orders with filtering and pagination
@@ -226,4 +227,4 @@ class OrderService {
   }
 }
 
-export default OrderService;
+export default new OrderService();

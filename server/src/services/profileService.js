@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Order from '../models/Order.js';
 import Item from '../models/Item.js';
+
 class ProfileService {
   // Get full user profile (for authenticated user)
   async getUserProfile(userId) {
@@ -184,4 +185,4 @@ class ProfileService {
   }
 }
 
-export default ProfileService;
+export default new ProfileService();

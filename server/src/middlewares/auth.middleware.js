@@ -1,6 +1,6 @@
-import { verify } from 'jsonwebtoken';
-import { jwt as _jwt } from '../config/auth.config.js';
-import { findById } from '../models/User.js';
+import jwt from 'jsonwebtoken';
+import config from '../config/auth.config.js';
+import User from '../models/User.js';
 
 // Verify JWT token middleware
 export async function verifyToken(req, res, next) {
@@ -15,10 +15,10 @@ export async function verifyToken(req, res, next) {
       });
     }
 
-    const decoded = verify(token, _jwt.secret);
+    const decoded = jwt.verify(token, config.jwt.secret);
 
     // Verify user still exists
-    const user = await findById(decoded.id);
+    const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(401).json({
         message: 'User no longer exists',
@@ -66,8 +66,8 @@ export async function optionalAuth(req, res, next) {
     const token = authHeader && authHeader.split(' ')[1];
 
     if (token) {
-      const decoded = verify(token, _jwt.secret);
-      const user = await findById(decoded.id);
+      const decoded = jwt.verify(token, config.jwt.secret);
+      const user = await User.findById(decoded.id);
 
       if (user) {
         req.user = {
@@ -96,7 +96,7 @@ export async function verifyAdmin(req, res, next) {
       });
     }
 
-    const user = await findById(req.user.id);
+    const user = await User.findById(req.user.id);
     if (!user || !user.isAdmin) {
       return res.status(403).json({
         message: 'Admin access required',

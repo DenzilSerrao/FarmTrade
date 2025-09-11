@@ -189,4 +189,4 @@ class SupportService {
   }
 }
 
-export default SupportService;
+export default new SupportService();

@@ -5,8 +5,12 @@ import passport from 'passport';
 import {
   login,
   register,
-  googleCallback,
   logout,
+  requestPasswordReset,
+  resetPassword,
+  verifyEmail,
+  googleCallback,
+  facebookCallback,
 } from '../controllers/authController.js';
 import { rateLimiter } from '../middlewares/auth.middleware.js';
 
@@ -18,15 +22,10 @@ router.use(rateLimiter(10, 15 * 60 * 1000));
 
 router.post('/login', login);
 router.post('/register', register);
-router.post('/logout', authController.logout);
-router.post('/request-password-reset', authController.requestPasswordReset);
-router.post('/reset-password', authController.resetPassword);
-router.get('/verify-email', authController.verifyEmail);
-// Debug: list exported keys from authController to confirm handlers exist
-console.log(
-  'authController exports:',
-  authController && Object.keys(authController)
-);
+router.post('/logout', logout);
+router.post('/request-password-reset', requestPasswordReset);
+router.post('/reset-password', resetPassword);
+router.get('/verify-email', verifyEmail);
 
 // Google OAuth start (redirects user to Google)
 router.get(
@@ -43,7 +42,7 @@ router.get(
   passport.authenticate('google', {
     failureRedirect: '/login?error=oauth_failed',
   }),
-  authController.googleCallback
+  googleCallback
 );
 
 // Facebook OAuth start (redirects user to Facebook)
@@ -61,7 +60,7 @@ router.get(
   passport.authenticate('facebook', {
     failureRedirect: '/login?error=oauth_failed',
   }),
-  authController.facebookCallback
+  facebookCallback
 );
 
 export default router;

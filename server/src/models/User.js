@@ -1,5 +1,7 @@
 import { Schema, model } from 'mongoose';
 import { hash, compare } from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import config from '../config/auth.config.js';
 
 const userSchema = new Schema(
   {
@@ -146,12 +148,12 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 userSchema.methods.generateAuthToken = function () {
   return jwt.sign(
     {
-      id: this._id,
+      id: this._id.toString(),
       email: this.email,
       verified: this.verified,
     },
     config.jwt.secret,
-    { expiresIn: '24h' }
+    { expiresIn: config.jwt.expiresIn }
   );
 };
 

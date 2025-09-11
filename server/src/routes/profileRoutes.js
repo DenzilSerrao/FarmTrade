@@ -1,25 +1,32 @@
 import express from 'express';
 const router = express.Router();
-import profileController from '../controllers/profileController.js';
+import {
+  getCurrentUserProfile,
+  getUserProfile,
+  updateUserProfile,
+  uploadAvatar,
+  deleteAccount,
+  getUserStats,
+} from '../controllers/profileController.js';
 
 // All profile routes require authentication (handled by app.js middleware)
 
 // GET current user's profile
-router.get('/', profileController.getCurrentUserProfile);
+router.get('/', getCurrentUserProfile);
 
 // GET user profile by ID (public with limited info)
-router.get('/:userId', profileController.getUserProfile);
+router.get('/:userId', getUserProfile);
 
 // PUT update current user's profile
-router.put('/', profileController.updateUserProfile);
+router.put('/', updateUserProfile);
 
 // POST upload profile avatar
-router.post('/avatar', profileController.uploadAvatar);
+router.post('/avatar', uploadAvatar);
 
 // DELETE user account
-router.delete('/', profileController.deleteAccount);
+router.delete('/', deleteAccount);
 
 // GET user's trading statistics
-router.get('/stats', profileController.getUserStats);
+router.get('/stats', getUserStats);
 
 export default router;

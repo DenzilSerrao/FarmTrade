@@ -1,5 +1,7 @@
 import { Schema, model } from 'mongoose';
 import { hash, compare } from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import config from '../config/auth.config.js';
 
 const adminSchema = new Schema(
   {
@@ -104,12 +106,12 @@ const adminSchema = new Schema(
 );
 
 // Index for performance
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
-userSchema.index({ facebookId: 1 });
+adminSchema.index({ email: 1 });
+adminSchema.index({ googleId: 1 });
+adminSchema.index({ facebookId: 1 });
 
 // Pre-save middleware to hash password
-userSchema.pre('save', async function (next) {
+adminSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
   try {
@@ -122,21 +124,21 @@ userSchema.pre('save', async function (next) {
 });
 
 // Method to compare password
-userSchema.methods.comparePassword = async function (candidatePassword) {
+adminSchema.methods.comparePassword = async function (candidatePassword) {
   if (!this.password) return false;
   return compare(candidatePassword, this.password);
 };
 
 // Method to generate auth token
-userSchema.methods.generateAuthToken = function () {
+adminSchema.methods.generateAuthToken = function () {
   return jwt.sign(
     {
-      id: this._id,
+      id: this._id.toString(),
       email: this.email,
       verified: this.verified,
     },
     config.jwt.secret,
-    { expiresIn: '24h' }
+    { expiresIn: config.jwt.expiresIn }
   );
 };
 

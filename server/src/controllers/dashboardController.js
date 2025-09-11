@@ -1,14 +1,10 @@
-import express from 'express';
-const router = express.Router();
-import DashboardService from '../services/dashboardService';
-
-const dashboardService = new DashboardService();
+import DashboardService from '../services/dashboardService.js';
 
 // GET news
-exports.getNews = async (req, res) => {
+export const getNews = async (req, res) => {
   try {
     const userId = req.user?.id; // Optional user context for personalization
-    const news = await dashboardService.getNews(userId);
+    const news = await DashboardService.getNews(userId);
     res.status(200).json({
       success: true,
       data: news,
@@ -24,10 +20,10 @@ exports.getNews = async (req, res) => {
 };
 
 // GET sales analytics
-exports.getSalesAnalytics = async (req, res) => {
+export const getSalesAnalytics = async (req, res) => {
   try {
     const userId = req.user.id;
-    const analytics = await dashboardService.getSalesAnalytics(userId);
+    const analytics = await DashboardService.getSalesAnalytics(userId);
     res.status(200).json({
       success: true,
       data: analytics,
@@ -43,10 +39,10 @@ exports.getSalesAnalytics = async (req, res) => {
 };
 
 // GET market data
-exports.getMarketData = async (req, res) => {
+export const getMarketData = async (req, res) => {
   try {
     const { region, crop } = req.query;
-    const marketData = await dashboardService.getMarketData(region, crop);
+    const marketData = await DashboardService.getMarketData(region, crop);
     res.status(200).json({
       success: true,
       data: marketData,
@@ -62,10 +58,10 @@ exports.getMarketData = async (req, res) => {
 };
 
 // GET dashboard summary
-exports.getDashboardSummary = async (req, res) => {
+export const getDashboardSummary = async (req, res) => {
   try {
     const userId = req.user.id;
-    const summary = await dashboardService.getDashboardSummary(userId);
+    const summary = await DashboardService.getDashboardSummary(userId);
     res.status(200).json({
       success: true,
       data: summary,
@@ -78,6 +74,13 @@ exports.getDashboardSummary = async (req, res) => {
       error: 'FETCH_SUMMARY_ERROR',
     });
   }
+};
+
+const dashboardController = {
+  getNews,
+  getSalesAnalytics,
+  getMarketData,
+  getDashboardSummary,
 };
 
 export default dashboardController;

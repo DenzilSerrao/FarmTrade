@@ -1,16 +1,12 @@
-import express from 'express';
-const router = express.Router();
-import ShelfService from '../services/shelfService';
-
-const shelfService = new ShelfService();
+import ShelfService from '../services/shelfService.js';
 
 // GET user's shelf items
-exports.getShelfItems = async (req, res) => {
+export const getShelfItems = async (req, res) => {
   try {
     const userId = req.user.id;
     const { category, lowStock, page = 1, limit = 20 } = req.query;
 
-    const items = await shelfService.getUserShelfItems(userId, {
+    const items = await ShelfService.getUserShelfItems(userId, {
       category,
       lowStock: lowStock === 'true',
       page,
@@ -32,12 +28,12 @@ exports.getShelfItems = async (req, res) => {
 };
 
 // GET specific shelf item
-exports.getShelfItem = async (req, res) => {
+export const getShelfItem = async (req, res) => {
   try {
     const { itemId } = req.params;
     const userId = req.user.id;
 
-    const item = await shelfService.getShelfItemById(itemId, userId);
+    const item = await ShelfService.getShelfItemById(itemId, userId);
 
     if (!item) {
       return res.status(404).json({
@@ -62,7 +58,7 @@ exports.getShelfItem = async (req, res) => {
 };
 
 // POST add new item to shelf
-exports.addShelfItem = async (req, res) => {
+export const addShelfItem = async (req, res) => {
   try {
     const userId = req.user.id;
     const itemData = {
@@ -79,7 +75,7 @@ exports.addShelfItem = async (req, res) => {
       });
     }
 
-    const createdItem = await shelfService.addShelfItem(itemData);
+    const createdItem = await ShelfService.addShelfItem(itemData);
 
     res.status(201).json({
       success: true,
@@ -97,13 +93,13 @@ exports.addShelfItem = async (req, res) => {
 };
 
 // PUT update shelf item
-exports.updateShelfItem = async (req, res) => {
+export const updateShelfItem = async (req, res) => {
   try {
     const { itemId } = req.params;
     const userId = req.user.id;
     const updateData = req.body;
 
-    const updatedItem = await shelfService.updateShelfItem(
+    const updatedItem = await ShelfService.updateShelfItem(
       itemId,
       userId,
       updateData
@@ -133,12 +129,12 @@ exports.updateShelfItem = async (req, res) => {
 };
 
 // DELETE remove item from shelf
-exports.deleteShelfItem = async (req, res) => {
+export const deleteShelfItem = async (req, res) => {
   try {
     const { itemId } = req.params;
     const userId = req.user.id;
 
-    const deleted = await shelfService.deleteShelfItem(itemId, userId);
+    const deleted = await ShelfService.deleteShelfItem(itemId, userId);
 
     if (!deleted) {
       return res.status(404).json({
@@ -163,10 +159,10 @@ exports.deleteShelfItem = async (req, res) => {
 };
 
 // GET shelf analytics
-exports.getShelfAnalytics = async (req, res) => {
+export const getShelfAnalytics = async (req, res) => {
   try {
     const userId = req.user.id;
-    const analytics = await shelfService.getShelfAnalytics(userId);
+    const analytics = await ShelfService.getShelfAnalytics(userId);
 
     res.status(200).json({
       success: true,
@@ -180,6 +176,15 @@ exports.getShelfAnalytics = async (req, res) => {
       error: 'FETCH_ANALYTICS_ERROR',
     });
   }
+};
+
+const shelfController = {
+  getShelfItems,
+  getShelfItem,
+  addShelfItem,
+  updateShelfItem,
+  deleteShelfItem,
+  getShelfAnalytics,
 };
 
 export default shelfController;

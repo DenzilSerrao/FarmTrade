@@ -1,14 +1,10 @@
-import express from 'express';
-const router = express.Router();
-import SupportService from '../services/supportService';
-
-const supportService = new SupportService();
+import SupportService from '../services/supportService.js';
 
 // GET FAQs (public)
-exports.getFAQs = async (req, res) => {
+export const getFAQs = async (req, res) => {
   try {
     const { category } = req.query;
-    const faqs = await supportService.getFAQs(category);
+    const faqs = await SupportService.getFAQs(category);
 
     res.status(200).json({
       success: true,
@@ -25,7 +21,7 @@ exports.getFAQs = async (req, res) => {
 };
 
 // POST send support message
-exports.sendMessage = async (req, res) => {
+export const sendMessage = async (req, res) => {
   try {
     const userId = req.user.id;
     const messageData = {
@@ -42,7 +38,7 @@ exports.sendMessage = async (req, res) => {
       });
     }
 
-    const message = await supportService.sendMessage(messageData);
+    const message = await SupportService.sendMessage(messageData);
 
     res.status(201).json({
       success: true,
@@ -60,12 +56,12 @@ exports.sendMessage = async (req, res) => {
 };
 
 // GET user's support messages
-exports.getUserMessages = async (req, res) => {
+export const getUserMessages = async (req, res) => {
   try {
     const userId = req.user.id;
     const { status, page = 1, limit = 10 } = req.query;
 
-    const messages = await supportService.getUserMessages(userId, {
+    const messages = await SupportService.getUserMessages(userId, {
       status,
       page,
       limit,
@@ -86,12 +82,12 @@ exports.getUserMessages = async (req, res) => {
 };
 
 // GET specific support message
-exports.getMessage = async (req, res) => {
+export const getMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
     const userId = req.user.id;
 
-    const message = await supportService.getMessageById(messageId, userId);
+    const message = await SupportService.getMessageById(messageId, userId);
 
     if (!message) {
       return res.status(404).json({
@@ -116,9 +112,9 @@ exports.getMessage = async (req, res) => {
 };
 
 // GET contact information (public)
-exports.getContactInfo = async (req, res) => {
+export const getContactInfo = async (req, res) => {
   try {
-    const contactInfo = await supportService.getContactInfo();
+    const contactInfo = await SupportService.getContactInfo();
 
     res.status(200).json({
       success: true,
@@ -132,6 +128,14 @@ exports.getContactInfo = async (req, res) => {
       error: 'FETCH_CONTACT_ERROR',
     });
   }
+};
+
+const supportController = {
+  getFAQs,
+  sendMessage,
+  getUserMessages,
+  getMessage,
+  getContactInfo,
 };
 
 export default supportController;

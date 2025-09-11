@@ -167,4 +167,4 @@ class ShelfService {
   }
 }
 
-export default ShelfService;
+export default new ShelfService();

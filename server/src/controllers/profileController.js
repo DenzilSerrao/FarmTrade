@@ -1,15 +1,11 @@
-import express from 'express';
-const router = express.Router();
-import ProfileService from '../services/profileService';
-import User from '../models/User';
-
-const profileService = new ProfileService();
+import ProfileService from '../services/profileService.js';
+import User from '../models/User.js';
 
 // GET current user's profile
-exports.getCurrentUserProfile = async (req, res) => {
+export const getCurrentUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
-    const userProfile = await profileService.getUserProfile(userId);
+    const userProfile = await ProfileService.getUserProfile(userId);
 
     if (!userProfile) {
       return res.status(404).json({
@@ -34,12 +30,12 @@ exports.getCurrentUserProfile = async (req, res) => {
 };
 
 // GET user profile by ID (public with limited info)
-exports.getUserProfile = async (req, res) => {
+export const getUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;
     const requestingUserId = req.user?.id;
 
-    const userProfile = await profileService.getPublicUserProfile(
+    const userProfile = await ProfileService.getPublicUserProfile(
       userId,
       requestingUserId
     );
@@ -67,7 +63,7 @@ exports.getUserProfile = async (req, res) => {
 };
 
 // PUT update current user's profile
-exports.updateUserProfile = async (req, res) => {
+export const updateUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
     const updateData = req.body;
@@ -81,7 +77,7 @@ exports.updateUserProfile = async (req, res) => {
     delete updateData.isAdmin;
     delete updateData.verified;
 
-    const updatedProfile = await profileService.updateUserProfile(
+    const updatedProfile = await ProfileService.updateUserProfile(
       userId,
       updateData
     );
@@ -110,7 +106,7 @@ exports.updateUserProfile = async (req, res) => {
 };
 
 // POST upload profile avatar
-exports.uploadAvatar = async (req, res) => {
+export const uploadAvatar = async (req, res) => {
   try {
     const userId = req.user.id;
     const { avatar } = req.body;
@@ -123,7 +119,7 @@ exports.uploadAvatar = async (req, res) => {
       });
     }
 
-    const updatedUser = await profileService.updateAvatar(userId, avatar);
+    const updatedUser = await ProfileService.updateAvatar(userId, avatar);
 
     res.status(200).json({
       success: true,
@@ -141,7 +137,7 @@ exports.uploadAvatar = async (req, res) => {
 };
 
 // DELETE user account
-exports.deleteAccount = async (req, res) => {
+export const deleteAccount = async (req, res) => {
   try {
     const userId = req.user.id;
     const { password } = req.body;
@@ -176,7 +172,7 @@ exports.deleteAccount = async (req, res) => {
       }
     }
 
-    await profileService.deleteUserAccount(userId);
+    await ProfileService.deleteUserAccount(userId);
 
     res.status(200).json({
       success: true,
@@ -193,10 +189,10 @@ exports.deleteAccount = async (req, res) => {
 };
 
 // GET user's trading statistics
-exports.getUserStats = async (req, res) => {
+export const getUserStats = async (req, res) => {
   try {
     const userId = req.user.id;
-    const stats = await profileService.getUserTradingStats(userId);
+    const stats = await ProfileService.getUserTradingStats(userId);
 
     res.status(200).json({
       success: true,
@@ -210,6 +206,15 @@ exports.getUserStats = async (req, res) => {
       error: 'FETCH_STATS_ERROR',
     });
   }
+};
+
+const profileController = {
+  getCurrentUserProfile,
+  getUserProfile,
+  updateUserProfile,
+  uploadAvatar,
+  deleteAccount,
+  getUserStats,
 };
 
 export default profileController;
