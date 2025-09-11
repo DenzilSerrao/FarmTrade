@@ -13,7 +13,6 @@ import shelfRoutes from './routes/shelfRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import supportRoutes from './routes/supportRoutes.js';
 import { verifyToken } from './middlewares/auth.middleware.js';
-require('dotenv').config();
 
 const app = express();
 

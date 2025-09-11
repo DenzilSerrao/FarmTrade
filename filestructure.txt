@@ -8782,10 +8782,15 @@
         |-- _layout.tsx
     |-- +not-found.tsx
     |-- auth
+        |-- forgot-password.tsx
         |-- login.tsx
         |-- register.tsx
+        |-- verification.tsx
         |-- _layout.tsx
     |-- index.tsx
+    |-- onboarding
+        |-- index.tsx
+        |-- _layout.tsx
     |-- _layout.tsx
 |-- app.json
 |-- assets
