@@ -1,202 +1,103 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  SafeAreaView,
-  StatusBar,
-} from 'react-native';
-import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 
-export default function OnboardingScreen() {
-  const handleGetStarted = () => {
-    router.push('/auth/register');
-  };
-
+const CropkartApp = () => {
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <View className="flex-1 bg-white">
+      <StatusBar style="dark" />
       
-      {/* Top Section with Title and Subtitle */}
-      <View style={styles.topSection}>
-        <Text style={styles.title}>Cropkart</Text>
-        <Text style={styles.subtitle}>Fresh produce, stright from the farm</Text>
-        
-        {/* Get Started Button */}
-        <TouchableOpacity style={styles.getStartedButton} onPress={handleGetStarted}>
-          <Text style={styles.getStartedText}>Get Started</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Bottom Hero Section */}
-      <View style={styles.heroSection}>
-        <View style={styles.heroContainer}>
-          <LinearGradient
-            colors={['#10B981', '#059669']}
-            style={styles.heroBackground}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            {/* Farmer Image */}
-            <View style={styles.imageContainer}>
-              <Image
-                source={{
-                  uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face'
-                }}
-                style={styles.farmerImage}
-                resizeMode="cover"
-              />
-              
-              {/* Vegetables in arms */}
-              <View style={styles.vegetablesContainer}>
-                <Image
-                  source={{
-                    uri: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=100&h=100&fit=crop'
-                  }}
-                  style={[styles.vegetableImage, styles.carrot]}
-                  resizeMode="cover"
-                />
-                <Image
-                  source={{
-                    uri: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=100&h=100&fit=crop'
-                  }}
-                  style={[styles.vegetableImage, styles.pepper]}
-                  resizeMode="cover"
-                />
-                <Image
-                  source={{
-                    uri: 'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=100&h=100&fit=crop'
-                  }}
-                  style={[styles.vegetableImage, styles.leafy]}
-                  resizeMode="cover"
-                />
-              </View>
-            </View>
-          </LinearGradient>
+      {/* Header */}
+      <View className="flex-row justify-between items-center px-6 pt-12 pb-4 bg-white shadow-sm">
+        <Text className="text-2xl font-bold text-green-800">Cropkart</Text>
+        <View className="flex-row space-x-4">
+          <TouchableOpacity className="p-2">
+            <Text className="text-green-600">Login</Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="bg-green-600 px-4 py-2 rounded-full">
+            <Text className="text-white font-medium">Sign Up</Text>
+          </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+
+      {/* Hero Section */}
+      <View className="flex-1 px-6 justify-center items-center">
+        <View className="items-center mb-8">
+          <Text className="text-5xl font-bold text-green-800 text-center mb-4">
+            Cropkart
+          </Text>
+          <Text className="text-xl text-gray-600 text-center mb-8">
+            Fresh produce, straight from the farm
+          </Text>
+          
+          {/* Decorative elements */}
+          <View className="flex-row justify-center space-x-6 mb-8">
+            <View className="w-16 h-16 bg-green-100 rounded-full items-center justify-center">
+              <Text className="text-2xl">🌱</Text>
+            </View>
+            <View className="w-16 h-16 bg-yellow-100 rounded-full items-center justify-center">
+              <Text className="text-2xl">🍎</Text>
+            </View>
+            <View className="w-16 h-16 bg-orange-100 rounded-full items-center justify-center">
+              <Text className="text-2xl">🥕</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* CTA Button */}
+        <TouchableOpacity className="bg-green-600 px-8 py-4 rounded-full shadow-lg">
+          <Text className="text-white text-lg font-semibold">Shop Fresh Now</Text>
+        </TouchableOpacity>
+
+        {/* Features Grid */}
+        <View className="flex-row flex-wrap justify-center mt-16 gap-6">
+          <View className="items-center w-28">
+            <View className="w-14 h-14 bg-green-50 rounded-xl items-center justify-center mb-2">
+              <Text className="text-2xl">🚚</Text>
+            </View>
+            <Text className="text-sm text-gray-600 text-center">Fast Delivery</Text>
+          </View>
+          
+          <View className="items-center w-28">
+            <View className="w-14 h-14 bg-green-50 rounded-xl items-center justify-center mb-2">
+              <Text className="text-2xl">🌿</Text>
+            </View>
+            <Text className="text-sm text-gray-600 text-center">Organic</Text>
+          </View>
+          
+          <View className="items-center w-28">
+            <View className="w-14 h-14 bg-green-50 rounded-xl items-center justify-center mb-2">
+              <Text className="text-2xl">⭐</Text>
+            </View>
+            <Text className="text-sm text-gray-600 text-center">Quality</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Bottom Navigation */}
+      <View className="flex-row justify-around items-center px-6 py-4 border-t border-gray-200">
+        <TouchableOpacity className="items-center">
+          <Text className="text-2xl">🏠</Text>
+          <Text className="text-xs text-green-600 mt-1">Home</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity className="items-center">
+          <Text className="text-2xl">🛒</Text>
+          <Text className="text-xs text-gray-500 mt-1">Shop</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity className="items-center">
+          <Text className="text-2xl">❤️</Text>
+          <Text className="text-xs text-gray-500 mt-1">Favorites</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity className="items-center">
+          <Text className="text-2xl">👤</Text>
+          <Text className="text-xs text-gray-500 mt-1">Profile</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  topSection: {
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingTop: 60,
-    paddingBottom: 40,
-  },
-  title: {
-    fontSize: 42,
-    fontWeight: '800',
-    color: '#059669',
-    marginBottom: 8,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#059669',
-    textAlign: 'center',
-    marginBottom: 40,
-    fontWeight: '500',
-  },
-  getStartedButton: {
-    backgroundColor: '#9CA3AF',
-    borderRadius: 30,
-    paddingVertical: 18,
-    paddingHorizontal: 48,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  getStartedText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  heroSection: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  heroContainer: {
-    height: '75%',
-    width: '100%',
-  },
-  heroBackground: {
-    flex: 1,
-    borderTopLeftRadius: 200,
-    borderTopRightRadius: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 60,
-    overflow: 'hidden',
-  },
-  imageContainer: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  farmerImage: {
-    width: 280,
-    height: 350,
-    borderRadius: 20,
-    borderWidth: 4,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  vegetablesContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  vegetableImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
-    backgroundColor: '#FFFFFF',
-  },
-  carrot: {
-    transform: [{ rotate: '-15deg' }],
-  },
-  pepper: {
-    transform: [{ rotate: '10deg' }],
-  },
-  leafy: {
-    transform: [{ rotate: '-8deg' }],
-  },
-});
-
-// About NativeWind (React Native's Tailwind equivalent):
-// 
-// To use NativeWind in your project, you would need to:
-// 1. Install: npm install nativewind
-// 2. Install: npm install --save-dev tailwindcss@3.3.2
-// 3. Run: npx tailwindcss init
-// 4. Configure your tailwind.config.js
-// 5. Add NativeWind to your babel.config.js
-//
-// Then you could use className instead of style:
-// <View className="flex-1 bg-white">
-//   <Text className="text-4xl font-bold text-green-600">Cropkart</Text>
-// </View>
-//
-// But for now, this uses regular StyleSheet which works out of the box.
+export default CropkartApp;

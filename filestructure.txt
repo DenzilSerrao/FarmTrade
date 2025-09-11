@@ -8787,16 +8787,20 @@
         |-- register.tsx
         |-- verification.tsx
         |-- _layout.tsx
+    |-- global.css
     |-- index.tsx
     |-- onboarding
         |-- index.tsx
         |-- _layout.tsx
     |-- _layout.tsx
+|-- app.config.js
+|-- app.config.production.js
 |-- app.json
 |-- assets
     |-- images
         |-- favicon.png
         |-- icon.png
+|-- babel.congif.js
 |-- components
     |-- StatusBadge.tsx
 |-- expo-env.d.ts
@@ -8806,6 +8810,7 @@
     |-- api.ts
     |-- auth.ts
     |-- axios.ts
+    |-- config.ts
     |-- constants.ts
     |-- validation.ts
 |-- package-lock.json
@@ -8858,6 +8863,7 @@
             |-- shelfService.js
             |-- supportService.js
 |-- structure.py
+|-- tailwind.config.js
 |-- tsconfig.json
 |-- types
     |-- index.ts

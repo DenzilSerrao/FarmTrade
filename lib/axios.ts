@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { getStoredAuth } from './auth';
+import { Config } from './config';
 
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: Config.API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -4,14 +4,15 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Alert,
   ScrollView,
 } from 'react-native';
 import { Link, router } from 'expo-router';
-import { Sprout, User, Mail, Phone, MapPin, Lock } from 'lucide-react-native';
+import { User, Mail, Phone, MapPin, Lock } from 'lucide-react-native';
+import { register } from '../../lib/api';
+import { setStoredAuth } from '../../lib/auth';
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
@@ -25,8 +26,9 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!formData.name || !formData.email || !formData.phone || !formData.location || !formData.password) {
-      Alert.alert('Error', 'Please fill in all fields');
+    // Validation
+    if (!formData.name || !formData.email || !formData.password) {
+      Alert.alert('Error', 'Please fill in all required fields (Name, Email, Password)');
       return;
     }
 
@@ -35,15 +37,49 @@ export default function RegisterScreen() {
       return;
     }
 
+    if (formData.password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      return;
+    }
+
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await register(formData.name, formData.email, formData.password);
+      
+      if (response.success) {
+        // Store auth data if login is automatic after registration
+        if (response.token && response.user) {
+          await setStoredAuth(response.token, response.user);
+          
+          Alert.alert('Success', 'Account created successfully!', [
+            {
+              text: 'OK',
+              onPress: () => router.replace('/(tabs)'),
+            },
+          ]);
+        } else {
+          // If manual login required
+          Alert.alert('Success', 'Account created successfully! Please log in.', [
+            {
+              text: 'OK',
+              onPress: () => router.replace('/auth/login'),
+            },
+          ]);
+        }
+      } else {
+        Alert.alert('Error', response.message || 'Registration failed');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      Alert.alert(
+        'Error',
+        // error.response?.data?.message || 'Registration failed. Please try again.'
+        'Registration failed. Please try again.'
+      );
+    } finally {
       setLoading(false);
-      Alert.alert('Success', 'Account created successfully!', [
-        { text: 'OK', onPress: () => router.replace('/auth/login') }
-      ]);
-    }, 1500);
+    }
   };
 
   const updateFormData = (field: string, value: string) => {
@@ -52,97 +88,121 @@ export default function RegisterScreen() {
 
   return (
     <KeyboardAvoidingView 
-      style={styles.container} 
+      className="flex-1 bg-gray-50" 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Sprout size={48} color="#22C55E" />
-          <Text style={styles.title}>Join FarmTrade</Text>
-          <Text style={styles.subtitle}>Start trading with fellow farmers</Text>
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header */}
+        <View className="items-center mb-10">
+          <View className="w-12 h-12 bg-green-500 rounded-full items-center justify-center mb-4">
+            <Text className="text-white text-xl font-bold">🌱</Text>
+          </View>
+          <Text className="text-3xl font-bold text-gray-900 mt-4">Join FarmTrade</Text>
+          <Text className="text-base text-gray-500 mt-1">Start trading with fellow farmers</Text>
         </View>
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <User size={20} color="#6B7280" style={styles.inputIcon} />
+        {/* Form */}
+        <View className="gap-4">
+          {/* Full Name */}
+          <View className="flex-row items-center bg-white rounded-xl px-4 py-4 border border-gray-200">
+            <User size={20} color="#6B7280" className="mr-3" />
             <TextInput
-              style={styles.input}
+              className="flex-1 text-base text-gray-900"
               placeholder="Full Name"
               value={formData.name}
               onChangeText={(value) => updateFormData('name', value)}
+              placeholderTextColor="#9CA3AF"
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Mail size={20} color="#6B7280" style={styles.inputIcon} />
+          {/* Email Address */}
+          <View className="flex-row items-center bg-white rounded-xl px-4 py-4 border border-gray-200">
+            <Mail size={20} color="#6B7280" className="mr-3" />
             <TextInput
-              style={styles.input}
+              className="flex-1 text-base text-gray-900"
               placeholder="Email Address"
               value={formData.email}
               onChangeText={(value) => updateFormData('email', value)}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
+              placeholderTextColor="#9CA3AF"
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Phone size={20} color="#6B7280" style={styles.inputIcon} />
+          {/* Phone Number */}
+          <View className="flex-row items-center bg-white rounded-xl px-4 py-4 border border-gray-200">
+            <Phone size={20} color="#6B7280" className="mr-3" />
             <TextInput
-              style={styles.input}
-              placeholder="Phone Number"
+              className="flex-1 text-base text-gray-900"
+              placeholder="Phone Number (Optional)"
               value={formData.phone}
               onChangeText={(value) => updateFormData('phone', value)}
               keyboardType="phone-pad"
+              placeholderTextColor="#9CA3AF"
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <MapPin size={20} color="#6B7280" style={styles.inputIcon} />
+          {/* Farm Location */}
+          <View className="flex-row items-center bg-white rounded-xl px-4 py-4 border border-gray-200">
+            <MapPin size={20} color="#6B7280" className="mr-3" />
             <TextInput
-              style={styles.input}
-              placeholder="Farm Location"
+              className="flex-1 text-base text-gray-900"
+              placeholder="Farm Location (Optional)"
               value={formData.location}
               onChangeText={(value) => updateFormData('location', value)}
+              placeholderTextColor="#9CA3AF"
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Lock size={20} color="#6B7280" style={styles.inputIcon} />
+          {/* Password */}
+          <View className="flex-row items-center bg-white rounded-xl px-4 py-4 border border-gray-200">
+            <Lock size={20} color="#6B7280" className="mr-3" />
             <TextInput
-              style={styles.input}
+              className="flex-1 text-base text-gray-900"
               placeholder="Password"
               value={formData.password}
               onChangeText={(value) => updateFormData('password', value)}
               secureTextEntry
+              autoCapitalize="none"
+              placeholderTextColor="#9CA3AF"
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Lock size={20} color="#6B7280" style={styles.inputIcon} />
+          {/* Confirm Password */}
+          <View className="flex-row items-center bg-white rounded-xl px-4 py-4 border border-gray-200">
+            <Lock size={20} color="#6B7280" className="mr-3" />
             <TextInput
-              style={styles.input}
+              className="flex-1 text-base text-gray-900"
               placeholder="Confirm Password"
               value={formData.confirmPassword}
               onChangeText={(value) => updateFormData('confirmPassword', value)}
               secureTextEntry
+              autoCapitalize="none"
+              placeholderTextColor="#9CA3AF"
             />
           </View>
 
+          {/* Register Button */}
           <TouchableOpacity 
-            style={[styles.button, loading && styles.buttonDisabled]} 
+            className={`bg-green-500 rounded-xl py-4 items-center mt-2 ${loading ? 'opacity-60' : ''}`}
             onPress={handleRegister}
             disabled={loading}
           >
-            <Text style={styles.buttonText}>
+            <Text className="text-white text-base font-semibold">
               {loading ? 'Creating Account...' : 'Create Account'}
             </Text>
           </TouchableOpacity>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
+          {/* Footer */}
+          <View className="flex-row justify-center mt-6">
+            <Text className="text-gray-500 text-sm">Already have an account? </Text>
             <Link href="/auth/login" asChild>
               <TouchableOpacity>
-                <Text style={styles.linkText}>Sign In</Text>
+                <Text className="text-green-500 text-sm font-semibold">Sign In</Text>
               </TouchableOpacity>
             </Link>
           </View>
@@ -151,81 +211,3 @@ export default function RegisterScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 40,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginTop: 16,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginTop: 4,
-  },
-  form: {
-    gap: 16,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  button: {
-    backgroundColor: '#22C55E',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
-  },
-  footerText: {
-    color: '#6B7280',
-    fontSize: 14,
-  },
-  linkText: {
-    color: '#22C55E',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});

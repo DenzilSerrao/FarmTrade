@@ -1,10 +1,11 @@
 import axios, { AxiosError } from 'axios';
 import { getStoredAuth } from './auth';
-import { Product } from '../types';
+import { ShelfItem } from '../types';
+import { Config } from './config';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/farmertrader/api',
+  baseURL: Config.API_URL || 'http://localhost:5000/farmertrader/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -55,8 +56,8 @@ export const verifyToken = async (token: string) => {
   return response.data;
 };
 
-export const fetchProducts = async (): Promise<Product[]> => {
-  const response = await api.get('/products');
+export const fetchProducts = async (): Promise<ShelfItem[]> => {
+  const response = await api.get('/shelfitems');
   return response.data.data.products;
 };
 

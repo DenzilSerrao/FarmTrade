@@ -19,6 +19,16 @@
     "plugins": ["expo-router", "expo-font", "expo-web-browser"],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "API_URL": "http://localhost:5000/api",
+      "NODE_ENV": "development",
+      "APP_NAME": "FarmTrade",
+      "ENABLE_GOOGLE_AUTH": false,
+      "ENABLE_FACEBOOK_AUTH": false,
+      "ENABLE_EMAIL_AUTH": true,
+      "VITE_RAZORPAY_KEY_ID": "rzp_test_development_key",
+      "MAX_UPLOAD_SIZE": 5242880
     }
   }
 }

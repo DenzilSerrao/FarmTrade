@@ -4,13 +4,15 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { Link, router } from 'expo-router';
-import { Sprout, Mail, Lock } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { login } from '../../lib/api';
+import { setStoredAuth } from '../../lib/auth';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -25,146 +27,121 @@ export default function LoginScreen() {
 
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await login(email, password);
+      
+      if (response.success) {
+        // Store auth data
+        await setStoredAuth(response.token, response.user);
+        
+        Alert.alert('Success', 'Logged in successfully!', [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/(tabs)'),
+          },
+        ]);
+      } else {
+        Alert.alert('Error', response.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert(
+        'Error',
+        // error.response?.data?.message || 'Login failed. Please try again.'
+        'Login failed. Please try again.'
+      );
+    } finally {
       setLoading(false);
-      router.replace('/(tabs)');
-    }, 1500);
+    }
   };
 
   return (
     <KeyboardAvoidingView 
-      style={styles.container} 
+      className="flex-1 bg-white" 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Sprout size={48} color="#22C55E" />
-          <Text style={styles.title}>FarmTrade</Text>
-          <Text style={styles.subtitle}>Connect. Trade. Grow.</Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Mail size={20} color="#6B7280" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Email or Username"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+      <ScrollView 
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        className="flex-1"
+      >
+        <View className="flex-1 px-8 pt-20 pb-10">
+          {/* Header */}
+          <View className="mb-15">
+            <Text className="text-4xl font-light text-black leading-11">Log into</Text>
+            <Text className="text-4xl font-light text-black leading-11">your account</Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Lock size={20} color="#6B7280" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-          </View>
+          {/* Form */}
+          <View className="flex-1">
+            <View className="mb-8">
+              <Text className="text-base text-gray-700 mb-2 font-normal">Email address</Text>
+              <TextInput
+                className="border-b border-gray-200 pb-3 text-base text-black"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                placeholderTextColor="#9CA3AF"
+              />
+            </View>
 
-          <TouchableOpacity 
-            style={[styles.button, loading && styles.buttonDisabled]} 
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? 'Signing In...' : 'Sign In'}
-            </Text>
-          </TouchableOpacity>
+            <View className="mb-8">
+              <Text className="text-base text-gray-700 mb-2 font-normal">Password</Text>
+              <TextInput
+                className="border-b border-gray-200 pb-3 text-base text-black"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                placeholderTextColor="#9CA3AF"
+              />
+            </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
-            <Link href="/auth/register" asChild>
-              <TouchableOpacity>
-                <Text style={styles.linkText}>Register</Text>
+            <TouchableOpacity className="self-end mb-10 -mt-4">
+              <Text className="text-sm text-gray-500 font-normal">Forgot Password?</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              className={`bg-gray-600 rounded-full py-4.5 items-center mb-8 ${loading ? 'opacity-60' : ''}`}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text className="text-white text-base font-semibold tracking-wide">
+                {loading ? 'LOGGING IN...' : 'LOG IN'}
+              </Text>
+            </TouchableOpacity>
+
+            <Text className="text-center text-sm text-gray-400 mb-6">or log in with</Text>
+
+            {/* Social Login Options */}
+            <View className="flex-row justify-center gap-6 mb-15">
+              <TouchableOpacity className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center border border-gray-200">
+                <Text className="text-xl font-semibold text-gray-700">🍎</Text>
               </TouchableOpacity>
-            </Link>
+              
+              <TouchableOpacity className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center border border-gray-200">
+                <Text className="text-xl font-semibold text-gray-700">G</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center border border-gray-200">
+                <Text className="text-xl font-semibold text-gray-700">f</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Footer */}
+            <View className="flex-row justify-center items-center mt-auto">
+              <Text className="text-base text-gray-700 font-normal">Don't have an account? </Text>
+              <Link href="/auth/register" asChild>
+                <TouchableOpacity>
+                  <Text className="text-base text-black font-semibold underline">Sign Up</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginTop: 16,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginTop: 4,
-  },
-  form: {
-    gap: 20,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  button: {
-    backgroundColor: '#22C55E',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
-  },
-  footerText: {
-    color: '#6B7280',
-    fontSize: 14,
-  },
-  linkText: {
-    color: '#22C55E',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});

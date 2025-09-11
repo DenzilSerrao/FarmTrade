@@ -1,5 +1,7 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL;
-export const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID;
+import { Config } from './config';
+
+export const API_BASE_URL = Config.API_URL;
+export const RAZORPAY_KEY_ID = Config.VITE_RAZORPAY_KEY_ID;
 
 export const STATUS_ICONS = {
   pending: 'Clock',
