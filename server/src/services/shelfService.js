@@ -1,4 +1,4 @@
-const Item = require('../models/Item');
+import Item from '../models/Item.js';
 
 class ShelfService {
   // Get user's shelf items with filtering and pagination
@@ -6,12 +6,12 @@ class ShelfService {
     try {
       const { category, lowStock, page = 1, limit = 20 } = options;
       const skip = (page - 1) * limit;
-      
-      const query = { 
+
+      const query = {
         ownerId: userId,
-        available: true
+        available: true,
       };
-      
+
       if (category) {
         query.category = category;
       }
@@ -23,7 +23,7 @@ class ShelfService {
 
       // Filter by low stock if requested
       if (lowStock) {
-        items = items.filter(item => item.lowStock);
+        items = items.filter((item) => item.lowStock);
       }
 
       const total = await Item.countDocuments(query);
@@ -34,8 +34,8 @@ class ShelfService {
           page: parseInt(page),
           limit: parseInt(limit),
           total,
-          pages: Math.ceil(total / limit)
-        }
+          pages: Math.ceil(total / limit),
+        },
       };
     } catch (error) {
       console.error('Error in getUserShelfItems:', error);
@@ -48,7 +48,7 @@ class ShelfService {
     try {
       const item = await Item.findOne({
         _id: itemId,
-        ownerId: userId
+        ownerId: userId,
       }).populate('ownerId', 'name location rating');
 
       return item;
@@ -63,7 +63,7 @@ class ShelfService {
     try {
       const item = new Item(itemData);
       await item.save();
-      
+
       await item.populate('ownerId', 'name location rating');
       return item;
     } catch (error) {
@@ -97,7 +97,7 @@ class ShelfService {
     try {
       const result = await Item.findOneAndDelete({
         _id: itemId,
-        ownerId: userId
+        ownerId: userId,
       });
 
       return !!result;
@@ -110,34 +110,47 @@ class ShelfService {
   // Get shelf analytics for user
   async getShelfAnalytics(userId) {
     try {
-      const totalItems = await Item.countDocuments({ 
-        ownerId: userId, 
-        available: true 
+      const totalItems = await Item.countDocuments({
+        ownerId: userId,
+        available: true,
       });
 
-      const lowStockItems = await Item.find({ 
-        ownerId: userId, 
-        available: true 
+      const lowStockItems = await Item.find({
+        ownerId: userId,
+        available: true,
       });
-      
-      const lowStockCount = lowStockItems.filter(item => item.lowStock).length;
+
+      const lowStockCount = lowStockItems.filter(
+        (item) => item.lowStock
+      ).length;
 
       const expiringSoon = await Item.countDocuments({
         ownerId: userId,
         available: true,
         expiryDate: {
-          $lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Next 7 days
-        }
+          $lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Next 7 days
+        },
       });
 
       const totalValue = await Item.aggregate([
         { $match: { ownerId: userId, available: true } },
-        { $group: { _id: null, total: { $sum: { $multiply: ['$quantity', '$price'] } } } }
+        {
+          $group: {
+            _id: null,
+            total: { $sum: { $multiply: ['$quantity', '$price'] } },
+          },
+        },
       ]);
 
       const categoryBreakdown = await Item.aggregate([
         { $match: { ownerId: userId, available: true } },
-        { $group: { _id: '$category', count: { $sum: 1 }, value: { $sum: { $multiply: ['$quantity', '$price'] } } } }
+        {
+          $group: {
+            _id: '$category',
+            count: { $sum: 1 },
+            value: { $sum: { $multiply: ['$quantity', '$price'] } },
+          },
+        },
       ]);
 
       return {
@@ -145,7 +158,7 @@ class ShelfService {
         lowStockCount,
         expiringSoon,
         totalValue: totalValue[0]?.total || 0,
-        categoryBreakdown
+        categoryBreakdown,
       };
     } catch (error) {
       console.error('Error in getShelfAnalytics:', error);
@@ -154,4 +167,4 @@ class ShelfService {
   }
 }
 
-module.exports = ShelfService;
+export default ShelfService;

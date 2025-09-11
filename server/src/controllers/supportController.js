@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const SupportService = require('../services/supportService');
+import SupportService from '../services/supportService';
 
 const supportService = new SupportService();
 
@@ -9,17 +9,17 @@ exports.getFAQs = async (req, res) => {
   try {
     const { category } = req.query;
     const faqs = await supportService.getFAQs(category);
-    
+
     res.status(200).json({
       success: true,
-      data: faqs
+      data: faqs,
     });
   } catch (error) {
     console.error('Error fetching FAQs:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch FAQs',
-      error: 'FETCH_FAQS_ERROR'
+      error: 'FETCH_FAQS_ERROR',
     });
   }
 };
@@ -30,7 +30,7 @@ exports.sendMessage = async (req, res) => {
     const userId = req.user.id;
     const messageData = {
       ...req.body,
-      userId
+      userId,
     };
 
     // Validation
@@ -38,23 +38,23 @@ exports.sendMessage = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Subject and content are required',
-        error: 'MISSING_REQUIRED_FIELDS'
+        error: 'MISSING_REQUIRED_FIELDS',
       });
     }
 
     const message = await supportService.sendMessage(messageData);
-    
+
     res.status(201).json({
       success: true,
       message: 'Support message sent successfully',
-      data: message
+      data: message,
     });
   } catch (error) {
     console.error('Error sending support message:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to send message',
-      error: 'SEND_MESSAGE_ERROR'
+      error: 'SEND_MESSAGE_ERROR',
     });
   }
 };
@@ -64,19 +64,23 @@ exports.getUserMessages = async (req, res) => {
   try {
     const userId = req.user.id;
     const { status, page = 1, limit = 10 } = req.query;
-    
-    const messages = await supportService.getUserMessages(userId, { status, page, limit });
-    
+
+    const messages = await supportService.getUserMessages(userId, {
+      status,
+      page,
+      limit,
+    });
+
     res.status(200).json({
       success: true,
-      data: messages
+      data: messages,
     });
   } catch (error) {
     console.error('Error fetching user messages:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch messages',
-      error: 'FETCH_MESSAGES_ERROR'
+      error: 'FETCH_MESSAGES_ERROR',
     });
   }
 };
@@ -86,27 +90,27 @@ exports.getMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
     const userId = req.user.id;
-    
+
     const message = await supportService.getMessageById(messageId, userId);
-    
+
     if (!message) {
       return res.status(404).json({
         success: false,
         message: 'Message not found',
-        error: 'MESSAGE_NOT_FOUND'
+        error: 'MESSAGE_NOT_FOUND',
       });
     }
 
     res.status(200).json({
       success: true,
-      data: message
+      data: message,
     });
   } catch (error) {
     console.error('Error fetching message:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch message',
-      error: 'FETCH_MESSAGE_ERROR'
+      error: 'FETCH_MESSAGE_ERROR',
     });
   }
 };
@@ -115,17 +119,19 @@ exports.getMessage = async (req, res) => {
 exports.getContactInfo = async (req, res) => {
   try {
     const contactInfo = await supportService.getContactInfo();
-    
+
     res.status(200).json({
       success: true,
-      data: contactInfo
+      data: contactInfo,
     });
   } catch (error) {
     console.error('Error fetching contact info:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch contact information',
-      error: 'FETCH_CONTACT_ERROR'
+      error: 'FETCH_CONTACT_ERROR',
     });
   }
 };
+
+export default supportController;

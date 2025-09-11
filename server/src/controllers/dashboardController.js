@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const DashboardService = require('../services/dashboardService');
+import DashboardService from '../services/dashboardService';
 
 const dashboardService = new DashboardService();
 
@@ -11,14 +11,14 @@ exports.getNews = async (req, res) => {
     const news = await dashboardService.getNews(userId);
     res.status(200).json({
       success: true,
-      data: news
+      data: news,
     });
   } catch (error) {
     console.error('Error fetching news:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch news',
-      error: 'FETCH_NEWS_ERROR'
+      error: 'FETCH_NEWS_ERROR',
     });
   }
 };
@@ -30,14 +30,14 @@ exports.getSalesAnalytics = async (req, res) => {
     const analytics = await dashboardService.getSalesAnalytics(userId);
     res.status(200).json({
       success: true,
-      data: analytics
+      data: analytics,
     });
   } catch (error) {
     console.error('Error fetching sales analytics:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch analytics',
-      error: 'FETCH_ANALYTICS_ERROR'
+      error: 'FETCH_ANALYTICS_ERROR',
     });
   }
 };
@@ -49,14 +49,14 @@ exports.getMarketData = async (req, res) => {
     const marketData = await dashboardService.getMarketData(region, crop);
     res.status(200).json({
       success: true,
-      data: marketData
+      data: marketData,
     });
   } catch (error) {
     console.error('Error fetching market data:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch market data',
-      error: 'FETCH_MARKET_ERROR'
+      error: 'FETCH_MARKET_ERROR',
     });
   }
 };
@@ -68,14 +68,16 @@ exports.getDashboardSummary = async (req, res) => {
     const summary = await dashboardService.getDashboardSummary(userId);
     res.status(200).json({
       success: true,
-      data: summary
+      data: summary,
     });
   } catch (error) {
     console.error('Error fetching dashboard summary:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch dashboard summary',
-      error: 'FETCH_SUMMARY_ERROR'
+      error: 'FETCH_SUMMARY_ERROR',
     });
   }
 };
+
+export default dashboardController;

@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const dashboardController = require('../controllers/dashboardController');
-const { optionalAuth } = require('../middlewares/auth.middleware');
+import dashboardController from '../controllers/dashboardController.js';
+import { optionalAuth } from '../middlewares/auth.middleware.js';
 
 // GET news (can be accessed with optional auth for personalization)
 router.get('/news', optionalAuth, dashboardController.getNews);
@@ -15,4 +15,4 @@ router.get('/market-data', optionalAuth, dashboardController.getMarketData);
 // GET user dashboard summary (requires authentication)
 router.get('/summary', dashboardController.getDashboardSummary);
 
-module.exports = router;
+export default router;

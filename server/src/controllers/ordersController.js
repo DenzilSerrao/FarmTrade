@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const OrderService = require('../services/orderService');
-const Order = require('../models/Order');
+import OrderService from '../services/orderService';
+import Order from '../models/Order';
 
 const orderService = new OrderService();
 
@@ -10,18 +10,22 @@ exports.getOrders = async (req, res) => {
   try {
     const userId = req.user.id;
     const { status, page = 1, limit = 10 } = req.query;
-    
-    const orders = await orderService.getUserOrders(userId, { status, page, limit });
+
+    const orders = await orderService.getUserOrders(userId, {
+      status,
+      page,
+      limit,
+    });
     res.status(200).json({
       success: true,
-      data: orders
+      data: orders,
     });
   } catch (err) {
     console.error('Error fetching orders:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch orders',
-      error: 'FETCH_ORDERS_ERROR'
+      error: 'FETCH_ORDERS_ERROR',
     });
   }
 };
@@ -31,27 +35,27 @@ exports.getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
     const userId = req.user.id;
-    
+
     const order = await orderService.getOrderById(orderId, userId);
-    
+
     if (!order) {
       return res.status(404).json({
         success: false,
         message: 'Order not found',
-        error: 'ORDER_NOT_FOUND'
+        error: 'ORDER_NOT_FOUND',
       });
     }
 
     res.status(200).json({
       success: true,
-      data: order
+      data: order,
     });
   } catch (err) {
     console.error('Error fetching order:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch order',
-      error: 'FETCH_ORDER_ERROR'
+      error: 'FETCH_ORDER_ERROR',
     });
   }
 };
@@ -62,7 +66,7 @@ exports.createOrder = async (req, res) => {
     const userId = req.user.id;
     const orderData = {
       ...req.body,
-      buyerId: userId
+      buyerId: userId,
     };
 
     // Validation
@@ -70,7 +74,7 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Product name, quantity, and seller are required',
-        error: 'MISSING_REQUIRED_FIELDS'
+        error: 'MISSING_REQUIRED_FIELDS',
       });
     }
 
@@ -79,14 +83,14 @@ exports.createOrder = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Order created successfully',
-      data: createdOrder
+      data: createdOrder,
     });
   } catch (err) {
     console.error('Error creating order:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to create order',
-      error: 'CREATE_ORDER_ERROR'
+      error: 'CREATE_ORDER_ERROR',
     });
   }
 };
@@ -98,27 +102,31 @@ exports.updateOrder = async (req, res) => {
     const userId = req.user.id;
     const updateData = req.body;
 
-    const updatedOrder = await orderService.updateOrder(orderId, userId, updateData);
-    
+    const updatedOrder = await orderService.updateOrder(
+      orderId,
+      userId,
+      updateData
+    );
+
     if (!updatedOrder) {
       return res.status(404).json({
         success: false,
         message: 'Order not found or access denied',
-        error: 'ORDER_NOT_FOUND'
+        error: 'ORDER_NOT_FOUND',
       });
     }
 
     res.status(200).json({
       success: true,
       message: 'Order updated successfully',
-      data: updatedOrder
+      data: updatedOrder,
     });
   } catch (err) {
     console.error('Error updating order:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to update order',
-      error: 'UPDATE_ORDER_ERROR'
+      error: 'UPDATE_ORDER_ERROR',
     });
   }
 };
@@ -130,25 +138,25 @@ exports.cancelOrder = async (req, res) => {
     const userId = req.user.id;
 
     const cancelled = await orderService.cancelOrder(orderId, userId);
-    
+
     if (!cancelled) {
       return res.status(404).json({
         success: false,
         message: 'Order not found or cannot be cancelled',
-        error: 'CANCEL_ORDER_FAILED'
+        error: 'CANCEL_ORDER_FAILED',
       });
     }
 
     res.status(200).json({
       success: true,
-      message: 'Order cancelled successfully'
+      message: 'Order cancelled successfully',
     });
   } catch (err) {
     console.error('Error cancelling order:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to cancel order',
-      error: 'CANCEL_ORDER_ERROR'
+      error: 'CANCEL_ORDER_ERROR',
     });
   }
 };
@@ -160,25 +168,27 @@ exports.getOrderInvoice = async (req, res) => {
     const userId = req.user.id;
 
     const invoice = await orderService.generateInvoice(orderId, userId);
-    
+
     if (!invoice) {
       return res.status(404).json({
         success: false,
         message: 'Invoice not found',
-        error: 'INVOICE_NOT_FOUND'
+        error: 'INVOICE_NOT_FOUND',
       });
     }
 
     res.status(200).json({
       success: true,
-      data: invoice
+      data: invoice,
     });
   } catch (err) {
     console.error('Error fetching invoice:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch invoice',
-      error: 'FETCH_INVOICE_ERROR'
+      error: 'FETCH_INVOICE_ERROR',
     });
   }
 };
+
+export default ordersController;

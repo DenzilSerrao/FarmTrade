@@ -1,11 +1,27 @@
 // Auth routes
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const authController = require('../controllers/authController');
 import passport from 'passport';
-const jwt = require('jsonwebtoken');
-const config = require('../config/auth.config');
+import {
+  login,
+  register,
+  googleCallback,
+  logout,
+} from '../controllers/authController.js';
+import { rateLimiter } from '../middlewares/auth.middleware.js';
 
+// Apply rate limiting to auth routes (10 requests per 15 minutes)
+router.use(rateLimiter(10, 15 * 60 * 1000));
+
+// const jwt = require('jsonwebtoken');
+// const config = require('../config/auth.config');
+
+router.post('/login', login);
+router.post('/register', register);
+router.post('/logout', authController.logout);
+router.post('/request-password-reset', authController.requestPasswordReset);
+router.post('/reset-password', authController.resetPassword);
+router.get('/verify-email', authController.verifyEmail);
 // Debug: list exported keys from authController to confirm handlers exist
 console.log(
   'authController exports:',
@@ -48,4 +64,4 @@ router.get(
   authController.facebookCallback
 );
 
-module.exports = router;
+export default router;

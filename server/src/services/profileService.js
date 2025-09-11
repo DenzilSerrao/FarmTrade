@@ -1,7 +1,6 @@
-const User = require('../models/User');
-const Order = require('../models/Order');
-const Item = require('../models/Item');
-
+import User from '../models/User.js';
+import Order from '../models/Order.js';
+import Item from '../models/Item.js';
 class ProfileService {
   // Get full user profile (for authenticated user)
   async getUserProfile(userId) {
@@ -20,7 +19,7 @@ class ProfileService {
       const user = await User.findById(userId).select(
         'name location rating totalTrades verified joinDate avatar'
       );
-      
+
       if (!user) {
         return null;
       }
@@ -41,22 +40,19 @@ class ProfileService {
   async updateUserProfile(userId, updateData) {
     try {
       // Sanitize update data - remove sensitive fields
-      const allowedFields = [
-        'name', 'phone', 'location', 'avatar'
-      ];
-      
+      const allowedFields = ['name', 'phone', 'location', 'avatar'];
+
       const sanitizedData = {};
-      allowedFields.forEach(field => {
+      allowedFields.forEach((field) => {
         if (updateData[field] !== undefined) {
           sanitizedData[field] = updateData[field];
         }
       });
 
-      const updatedUser = await User.findByIdAndUpdate(
-        userId,
-        sanitizedData,
-        { new: true, runValidators: true }
-      );
+      const updatedUser = await User.findByIdAndUpdate(userId, sanitizedData, {
+        new: true,
+        runValidators: true,
+      });
 
       return updatedUser;
     } catch (err) {
@@ -86,11 +82,8 @@ class ProfileService {
     try {
       // Check for active orders
       const activeOrders = await Order.countDocuments({
-        $or: [
-          { buyerId: userId },
-          { sellerId: userId }
-        ],
-        status: { $in: ['pending', 'accepted', 'shipped'] }
+        $or: [{ buyerId: userId }, { sellerId: userId }],
+        status: { $in: ['pending', 'accepted', 'shipped'] },
       });
 
       if (activeOrders > 0) {
@@ -98,16 +91,13 @@ class ProfileService {
       }
 
       // Soft delete - mark as inactive instead of hard delete
-      await User.findByIdAndUpdate(userId, { 
+      await User.findByIdAndUpdate(userId, {
         isActive: false,
-        email: `deleted_${Date.now()}_${userId}@deleted.com`
+        email: `deleted_${Date.now()}_${userId}@deleted.com`,
       });
 
       // Mark user's items as unavailable
-      await Item.updateMany(
-        { ownerId: userId },
-        { available: false }
-      );
+      await Item.updateMany({ ownerId: userId }, { available: false });
 
       return true;
     } catch (err) {
@@ -120,55 +110,49 @@ class ProfileService {
   async getUserTradingStats(userId) {
     try {
       const user = await User.findById(userId);
-      
+
       const orderStats = await Order.aggregate([
         {
           $match: {
-            $or: [
-              { buyerId: userId },
-              { sellerId: userId }
-            ]
-          }
+            $or: [{ buyerId: userId }, { sellerId: userId }],
+          },
         },
         {
           $group: {
             _id: '$status',
             count: { $sum: 1 },
-            totalValue: { $sum: '$totalPrice' }
-          }
-        }
+            totalValue: { $sum: '$totalPrice' },
+          },
+        },
       ]);
 
       const totalOrders = await Order.countDocuments({
-        $or: [
-          { buyerId: userId },
-          { sellerId: userId }
-        ]
+        $or: [{ buyerId: userId }, { sellerId: userId }],
       });
 
       const totalSales = await Order.countDocuments({
         sellerId: userId,
-        status: 'delivered'
+        status: 'delivered',
       });
 
       const totalPurchases = await Order.countDocuments({
         buyerId: userId,
-        status: 'delivered'
+        status: 'delivered',
       });
 
       const averageRating = await Order.aggregate([
         {
           $match: {
             sellerId: userId,
-            rating: { $exists: true }
-          }
+            rating: { $exists: true },
+          },
         },
         {
           $group: {
             _id: null,
-            avgRating: { $avg: '$rating' }
-          }
-        }
+            avgRating: { $avg: '$rating' },
+          },
+        },
       ]);
 
       return {
@@ -177,21 +161,21 @@ class ProfileService {
           rating: user.rating,
           totalTrades: user.totalTrades,
           verified: user.verified,
-          joinDate: user.joinDate
+          joinDate: user.joinDate,
         },
         orders: {
           total: totalOrders,
           sales: totalSales,
           purchases: totalPurchases,
-          byStatus: orderStats
+          byStatus: orderStats,
         },
         rating: {
           average: averageRating[0]?.avgRating || 0,
           total: await Order.countDocuments({
             sellerId: userId,
-            rating: { $exists: true }
-          })
-        }
+            rating: { $exists: true },
+          }),
+        },
       };
     } catch (err) {
       console.error('Error in getUserTradingStats:', err);
@@ -200,4 +184,4 @@ class ProfileService {
   }
 }
 
-module.exports = ProfileService;
+export default ProfileService;

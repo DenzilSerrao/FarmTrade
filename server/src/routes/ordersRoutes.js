@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const ordersController = require('../controllers/ordersController');
+import ordersController from '../controllers/ordersController.js';
 
 // All order routes require authentication (handled by app.js middleware)
 
@@ -22,4 +22,4 @@ router.delete('/:orderId', ordersController.cancelOrder);
 // GET order invoice
 router.get('/:orderId/invoice', ordersController.getOrderInvoice);
 
-module.exports = router;
+export default router;

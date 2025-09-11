@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const ProfileService = require('../services/profileService');
-const User = require('../models/User');
+import ProfileService from '../services/profileService';
+import User from '../models/User';
 
 const profileService = new ProfileService();
 
@@ -15,20 +15,20 @@ exports.getCurrentUserProfile = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'User profile not found',
-        error: 'PROFILE_NOT_FOUND'
+        error: 'PROFILE_NOT_FOUND',
       });
     }
 
     res.status(200).json({
       success: true,
-      data: userProfile
+      data: userProfile,
     });
   } catch (error) {
     console.error('Error fetching current user profile:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch profile',
-      error: 'FETCH_PROFILE_ERROR'
+      error: 'FETCH_PROFILE_ERROR',
     });
   }
 };
@@ -38,27 +38,30 @@ exports.getUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;
     const requestingUserId = req.user?.id;
-    
-    const userProfile = await profileService.getPublicUserProfile(userId, requestingUserId);
+
+    const userProfile = await profileService.getPublicUserProfile(
+      userId,
+      requestingUserId
+    );
 
     if (!userProfile) {
       return res.status(404).json({
         success: false,
         message: 'User not found',
-        error: 'USER_NOT_FOUND'
+        error: 'USER_NOT_FOUND',
       });
     }
 
     res.status(200).json({
       success: true,
-      data: userProfile
+      data: userProfile,
     });
   } catch (error) {
     console.error('Error fetching user profile:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch user profile',
-      error: 'FETCH_USER_ERROR'
+      error: 'FETCH_USER_ERROR',
     });
   }
 };
@@ -78,27 +81,30 @@ exports.updateUserProfile = async (req, res) => {
     delete updateData.isAdmin;
     delete updateData.verified;
 
-    const updatedProfile = await profileService.updateUserProfile(userId, updateData);
+    const updatedProfile = await profileService.updateUserProfile(
+      userId,
+      updateData
+    );
 
     if (!updatedProfile) {
       return res.status(404).json({
         success: false,
         message: 'Profile update failed',
-        error: 'UPDATE_FAILED'
+        error: 'UPDATE_FAILED',
       });
     }
 
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
-      data: updatedProfile
+      data: updatedProfile,
     });
   } catch (error) {
     console.error('Error updating user profile:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to update profile',
-      error: 'UPDATE_PROFILE_ERROR'
+      error: 'UPDATE_PROFILE_ERROR',
     });
   }
 };
@@ -113,7 +119,7 @@ exports.uploadAvatar = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Avatar data is required',
-        error: 'MISSING_AVATAR'
+        error: 'MISSING_AVATAR',
       });
     }
 
@@ -122,14 +128,14 @@ exports.uploadAvatar = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Avatar updated successfully',
-      data: { avatar: updatedUser.avatar }
+      data: { avatar: updatedUser.avatar },
     });
   } catch (error) {
     console.error('Error uploading avatar:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to upload avatar',
-      error: 'UPLOAD_AVATAR_ERROR'
+      error: 'UPLOAD_AVATAR_ERROR',
     });
   }
 };
@@ -146,7 +152,7 @@ exports.deleteAccount = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'User not found',
-        error: 'USER_NOT_FOUND'
+        error: 'USER_NOT_FOUND',
       });
     }
 
@@ -156,7 +162,7 @@ exports.deleteAccount = async (req, res) => {
         return res.status(400).json({
           success: false,
           message: 'Password is required for account deletion',
-          error: 'PASSWORD_REQUIRED'
+          error: 'PASSWORD_REQUIRED',
         });
       }
 
@@ -165,7 +171,7 @@ exports.deleteAccount = async (req, res) => {
         return res.status(401).json({
           success: false,
           message: 'Invalid password',
-          error: 'INVALID_PASSWORD'
+          error: 'INVALID_PASSWORD',
         });
       }
     }
@@ -174,14 +180,14 @@ exports.deleteAccount = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Account deleted successfully'
+      message: 'Account deleted successfully',
     });
   } catch (error) {
     console.error('Error deleting account:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to delete account',
-      error: 'DELETE_ACCOUNT_ERROR'
+      error: 'DELETE_ACCOUNT_ERROR',
     });
   }
 };
@@ -194,14 +200,16 @@ exports.getUserStats = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: stats
+      data: stats,
     });
   } catch (error) {
     console.error('Error fetching user stats:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: 'Failed to fetch user statistics',
-      error: 'FETCH_STATS_ERROR'
+      error: 'FETCH_STATS_ERROR',
     });
   }
 };
+
+export default profileController;

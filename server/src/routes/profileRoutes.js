@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const profileController = require('../controllers/profileController');
+import profileController from '../controllers/profileController.js';
 
 // All profile routes require authentication (handled by app.js middleware)
 
@@ -22,4 +22,4 @@ router.delete('/', profileController.deleteAccount);
 // GET user's trading statistics
 router.get('/stats', profileController.getUserStats);
 
-module.exports = router;
+export default router;

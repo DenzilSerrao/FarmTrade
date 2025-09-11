@@ -1,15 +1,7 @@
-const express = require('express');
-const passport = require('passport');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const config = require('../config/auth.config');
-const User = require('../models/User');
-const { rateLimiter } = require('../middlewares/auth.middleware');
-
-const router = express.Router();
-
-// Apply rate limiting to auth routes
-router.use(rateLimiter(10, 15 * 60 * 1000)); // 10 requests per 15 minutes
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import config from '../config/auth.config.js';
 
 // Helper function to generate JWT
 const generateToken = (user) => {
@@ -24,140 +16,91 @@ const generateToken = (user) => {
   );
 };
 
-// // ✅ Google Login (redirect to Google)
-// router.get(
-//   '/google',
-//   passport.authenticate('google', {
-//     scope: ['profile', 'email'],
-//     prompt: 'select_account',
-//   })
-// );
-
-// // ✅ Google Callback (exchange code → user → JWT)
-// router.get(
-//   '/google/callback',
-//   passport.authenticate('google', {
-//     failureRedirect: '/login?error=oauth_failed',
-//   }),
-//   async (req, res) => {
-//     try {
-//       const token = generateToken(req.user);
-
-//       // Redirect to frontend with token
-//       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8081';
-//       res.redirect(
-//         `${frontendUrl}/auth/callback?token=${token}&provider=google`
-//       );
-//     } catch (err) {
-//       console.error('Google OAuth callback error:', err);
-//       res.redirect('/login?error=auth_failed');
-//     }
-//   }
-// );
-
-// // ✅ Facebook Login (redirect to Facebook)
-// router.get(
-//   '/facebook',
-//   passport.authenticate('facebook', {
-//     scope: ['email'],
-//     display: 'popup',
-//   })
-// );
-
-// // ✅ Facebook Callback
-// router.get(
-//   '/facebook/callback',
-//   passport.authenticate('facebook', {
-//     failureRedirect: '/login?error=oauth_failed',
-//   }),
-//   async (req, res) => {
-//     try {
-//       const token = generateToken(req.user);
-
-//       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8081';
-//       res.redirect(
-//         `${frontendUrl}/auth/callback?token=${token}&provider=facebook`
-//       );
-//     } catch (err) {
-//       console.error('Facebook OAuth callback error:', err);
-//       res.redirect('/login?error=auth_failed');
-//     }
-//   }
-// );
-
-// ✅ Google Login (redirect to Google)
-router.get(
-  '/google',
-  passport.authenticate('google', {
-    scope: ['profile', 'email'],
-    prompt: 'select_account',
-  })
-);
-
-// ✅ Google Callback (exchange code → user → JWT)
-exports.googleCallback = async (req, res) => {
+// Login controller
+export const login = async (req, res) => {
   try {
-    const token = generateToken(req.user);
+    const { email, password } = req.body;
 
-    // Redirect to frontend with token
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8081';
-    res.redirect(`${frontendUrl}/auth/callback?token=${token}&provider=google`);
-  } catch (err) {
-    console.error('Google OAuth callback error:', err);
-    res.redirect('/login?error=auth_failed');
-  }
-};
-
-// ✅ Facebook Login (redirect to Facebook)
-router.get(
-  '/facebook',
-  passport.authenticate('facebook', {
-    scope: ['email'],
-    display: 'popup',
-  })
-);
-
-// ✅ Facebook Callback
-exports.facebookCallback = async (req, res) => {
-  try {
-    const token = generateToken(req.user);
-
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:8081';
-    res.redirect(
-      `${frontendUrl}/auth/callback?token=${token}&provider=facebook`
-    );
-  } catch (err) {
-    console.error('Facebook OAuth callback error:', err);
-    res.redirect('/login?error=auth_failed');
-  }
-};
-
-// ✅ Register user manually (email/password)
-exports.register = async (req, res) => {
-  try {
-    const { name, email, password, phone, location } = req.body;
-
-    // Validation
-    if (!name || !email || !password) {
+    // Validate input
+    if (!email || !password) {
       return res.status(400).json({
-        message: 'Name, email and password are required',
-        error: 'MISSING_REQUIRED_FIELDS',
+        success: false,
+        message: 'Email and password are required',
       });
     }
 
-    if (password.length < 6) {
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
+    }
+
+    // Check password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
+    }
+
+    // Check if email is verified
+    if (!user.verified) {
+      return res.status(401).json({
+        success: false,
+        message: 'Please verify your email before logging in',
+      });
+    }
+
+    // Generate token
+    const token = generateToken(user);
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        verified: user.verified,
+      },
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+// Register controller
+export const register = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Validate input
+    if (!name || !email || !password) {
       return res.status(400).json({
-        message: 'Password must be at least 6 characters long',
-        error: 'WEAK_PASSWORD',
+        success: false,
+        message: 'Name, email, and password are required',
       });
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({
-        message: 'User already exists with this email',
-        error: 'USER_EXISTS',
+        success: false,
+        message: 'User with this email already exists',
       });
     }
 
@@ -165,219 +108,260 @@ exports.register = async (req, res) => {
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create new user
-    const newUser = new User({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
+    // Create user
+    const user = new User({
+      name,
+      email,
       password: hashedPassword,
-      phone: phone?.trim(),
-      location: location?.trim(),
-      authProvider: 'local',
       verified: false,
-      joinDate: new Date().toISOString(),
+      createdAt: new Date(),
     });
 
-    await newUser.save();
-
-    // Generate token
-    const token = generateToken(newUser);
-
-    res.status(201).json({
-      message: 'Registration successful',
-      token,
-      user: {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        phone: newUser.phone,
-        location: newUser.location,
-        verified: newUser.verified,
-        joinDate: newUser.joinDate,
-      },
-    });
-  } catch (err) {
-    console.error('Registration error:', err);
-    res.status(500).json({
-      message: 'Registration failed',
-      error: 'INTERNAL_ERROR',
-    });
-  }
-};
-
-// ✅ Local login (email/password + JWT)
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({
-        message: 'Email and password are required',
-        error: 'MISSING_CREDENTIALS',
-      });
-    }
-
-    // Find user
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
-      return res.status(401).json({
-        message: 'Invalid email or password',
-        error: 'INVALID_CREDENTIALS',
-      });
-    }
-
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({
-        message: 'Invalid email or password',
-        error: 'INVALID_CREDENTIALS',
-      });
-    }
-
-    // Update last login
-    user.lastLogin = new Date();
     await user.save();
 
-    // Generate token
+    // Generate verification token
+    const verificationToken = jwt.sign(
+      { userId: user.id, email: user.email },
+      config.jwt.secret,
+      { expiresIn: '24h' }
+    );
+
+    // TODO: Send verification email here
+    console.log('Verification token:', verificationToken);
+
+    res.status(201).json({
+      success: true,
+      message:
+        'User registered successfully. Please check your email for verification.',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        verified: user.verified,
+      },
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+// Logout controller
+export const logout = async (req, res) => {
+  try {
+    // For JWT, logout is typically handled client-side by removing the token
+    // You might want to implement token blacklisting here if needed
+
+    res.json({
+      success: true,
+      message: 'Logout successful',
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+// Request password reset
+export const requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required',
+      });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return res.json({
+        success: true,
+        message: 'If the email exists, a password reset link has been sent.',
+      });
+    }
+
+    // Generate reset token
+    const resetToken = jwt.sign(
+      { userId: user.id, email: user.email },
+      config.jwt.secret,
+      { expiresIn: '1h' }
+    );
+
+    // TODO: Send password reset email here
+    console.log('Password reset token:', resetToken);
+
+    res.json({
+      success: true,
+      message: 'If the email exists, a password reset link has been sent.',
+    });
+  } catch (error) {
+    console.error('Password reset request error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+// Reset password
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token and new password are required',
+      });
+    }
+
+    // Verify reset token
+    const decoded = jwt.verify(token, config.jwt.secret);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token',
+      });
+    }
+
+    // Hash new password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update password
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password reset successful',
+    });
+  } catch (error) {
+    if (
+      error.name === 'JsonWebTokenError' ||
+      error.name === 'TokenExpiredError'
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset token',
+      });
+    }
+
+    console.error('Password reset error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+// Verify email
+export const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification token is required',
+      });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, config.jwt.secret);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired verification token',
+      });
+    }
+
+    if (user.verified) {
+      return res.json({
+        success: true,
+        message: 'Email is already verified',
+      });
+    }
+
+    // Verify user
+    user.verified = true;
+    user.verifiedAt = new Date();
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully',
+    });
+  } catch (error) {
+    if (
+      error.name === 'JsonWebTokenError' ||
+      error.name === 'TokenExpiredError'
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired verification token',
+      });
+    }
+
+    console.error('Email verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
+
+// Google OAuth callback
+export const googleCallback = async (req, res) => {
+  try {
+    // Passport.js puts user info in req.user after successful OAuth
+    const { user } = req;
+
+    if (!user) {
+      return res.redirect('/login?error=oauth_failed');
+    }
+
+    // Generate JWT token
     const token = generateToken(user);
 
-    res.status(200).json({
-      message: 'Login successful',
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        location: user.location,
-        verified: user.verified,
-        rating: user.rating,
-        joinDate: user.joinDate,
-        lastLogin: user.lastLogin,
-      },
-    });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({
-      message: 'Login failed',
-      error: 'INTERNAL_ERROR',
-    });
+    // Redirect to frontend with token
+    res.redirect(`/dashboard?token=${token}&auth=success`);
+  } catch (error) {
+    console.error('Google OAuth callback error:', error);
+    res.redirect('/login?error=oauth_failed');
   }
 };
 
-// ✅ Token verification endpoint
-exports.verify = async (req, res) => {
+// Facebook OAuth callback
+export const facebookCallback = async (req, res) => {
   try {
-    const { token } = req.body;
-
-    if (!token) {
-      return res.status(400).json({
-        message: 'Token is required',
-        error: 'MISSING_TOKEN',
-      });
-    }
-
-    const decoded = jwt.verify(token, config.jwt.secret);
-    const user = await User.findById(decoded.id);
+    // Passport.js puts user info in req.user after successful OAuth
+    const { user } = req;
 
     if (!user) {
-      return res.status(401).json({
-        message: 'User not found',
-        error: 'USER_NOT_FOUND',
-      });
+      return res.redirect('/login?error=oauth_failed');
     }
 
-    res.status(200).json({
-      valid: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        verified: user.verified,
-      },
-    });
-  } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        valid: false,
-        message: 'Token expired',
-        error: 'TOKEN_EXPIRED',
-      });
-    }
+    // Generate JWT token
+    const token = generateToken(user);
 
-    if (err.name === 'JsonWebTokenError') {
-      return res.status(401).json({
-        valid: false,
-        message: 'Invalid token',
-        error: 'INVALID_TOKEN',
-      });
-    }
-
-    console.error('Token verification error:', err);
-    res.status(500).json({
-      valid: false,
-      message: 'Verification failed',
-      error: 'VERIFICATION_ERROR',
-    });
+    // Redirect to frontend with token
+    res.redirect(`/dashboard?token=${token}&auth=success`);
+  } catch (error) {
+    console.error('Facebook OAuth callback error:', error);
+    res.redirect('/login?error=oauth_failed');
   }
 };
-
-// ✅ Logout endpoint
-exports.logout = async (req, res) => {
-  req.logout((err) => {
-    if (err) {
-      console.error('Logout error:', err);
-      return res.status(500).json({
-        message: 'Logout failed',
-        error: 'LOGOUT_ERROR',
-      });
-    }
-
-    res.status(200).json({ message: 'Logout successful' });
-  });
-};
-
-// ✅ Refresh token endpoint
-exports.refresh = async (req, res) => {
-  try {
-    const { token } = req.body;
-
-    if (!token) {
-      return res.status(400).json({
-        message: 'Token is required',
-        error: 'MISSING_TOKEN',
-      });
-    }
-
-    // Verify the old token (even if expired)
-    const decoded = jwt.verify(token, config.jwt.secret, {
-      ignoreExpiration: true,
-    });
-
-    // Check if user still exists
-    const user = await User.findById(decoded.id);
-    if (!user) {
-      return res.status(401).json({
-        message: 'User not found',
-        error: 'USER_NOT_FOUND',
-      });
-    }
-
-    // Generate new token
-    const newToken = generateToken(user);
-
-    res.status(200).json({
-      message: 'Token refreshed successfully',
-      token: newToken,
-    });
-  } catch (err) {
-    console.error('Token refresh error:', err);
-    res.status(401).json({
-      message: 'Token refresh failed',
-      error: 'REFRESH_FAILED',
-    });
-  }
-};
-
-module.exports = router;

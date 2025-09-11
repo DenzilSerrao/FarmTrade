@@ -1,4 +1,4 @@
-const Message = require('../models/Message');
+import Message from '../models/Message.js';
 
 class SupportService {
   // Send support message
@@ -6,7 +6,7 @@ class SupportService {
     try {
       const message = new Message(messageData);
       await message.save();
-      
+
       await message.populate('userId', 'name email');
       return message;
     } catch (err) {
@@ -20,7 +20,7 @@ class SupportService {
     try {
       const { status, page = 1, limit = 10 } = options;
       const skip = (page - 1) * limit;
-      
+
       const query = { userId };
       if (status) {
         query.status = status;
@@ -40,8 +40,8 @@ class SupportService {
           page: parseInt(page),
           limit: parseInt(limit),
           total,
-          pages: Math.ceil(total / limit)
-        }
+          pages: Math.ceil(total / limit),
+        },
       };
     } catch (err) {
       console.error('Error in getUserMessages:', err);
@@ -54,11 +54,11 @@ class SupportService {
     try {
       const message = await Message.findOne({
         _id: messageId,
-        userId: userId
+        userId: userId,
       })
-      .populate('userId', 'name email')
-      .populate('assignedTo', 'name')
-      .populate('responses.responderId', 'name');
+        .populate('userId', 'name email')
+        .populate('assignedTo', 'name')
+        .populate('responses.responderId', 'name');
 
       return message;
     } catch (err) {
@@ -76,42 +76,48 @@ class SupportService {
           id: 1,
           category: 'general',
           question: 'How do I reset my password?',
-          answer: 'You can reset your password by clicking on "Forgot Password" on the login page and following the instructions sent to your email.'
+          answer:
+            'You can reset your password by clicking on "Forgot Password" on the login page and following the instructions sent to your email.',
         },
         {
           id: 2,
           category: 'trading',
           question: 'How can I add crops to my shelf?',
-          answer: 'Go to the Shelf tab and click the "+" button to add new items. Fill in the required details like name, quantity, price, and expiry date.'
+          answer:
+            'Go to the Shelf tab and click the "+" button to add new items. Fill in the required details like name, quantity, price, and expiry date.',
         },
         {
           id: 3,
           category: 'orders',
           question: 'How do I track my orders?',
-          answer: 'Visit the Orders tab to see all your orders. You can filter by status and see detailed tracking information for each order.'
+          answer:
+            'Visit the Orders tab to see all your orders. You can filter by status and see detailed tracking information for each order.',
         },
         {
           id: 4,
           category: 'support',
           question: 'How do I contact support?',
-          answer: 'You can contact support through the Community tab, send us an email, or call our support hotline available 24/7.'
+          answer:
+            'You can contact support through the Community tab, send us an email, or call our support hotline available 24/7.',
         },
         {
           id: 5,
           category: 'trading',
           question: 'What payment methods are accepted?',
-          answer: 'We accept cash on delivery, UPI payments, bank transfers, and card payments through our secure payment gateway.'
+          answer:
+            'We accept cash on delivery, UPI payments, bank transfers, and card payments through our secure payment gateway.',
         },
         {
           id: 6,
           category: 'general',
           question: 'How is my rating calculated?',
-          answer: 'Your rating is based on feedback from buyers and sellers you\'ve traded with. It\'s calculated as an average of all ratings received.'
-        }
+          answer:
+            "Your rating is based on feedback from buyers and sellers you've traded with. It's calculated as an average of all ratings received.",
+        },
       ];
 
       if (category) {
-        return allFAQs.filter(faq => faq.category === category);
+        return allFAQs.filter((faq) => faq.category === category);
       }
 
       return allFAQs;
@@ -133,18 +139,18 @@ class SupportService {
           city: 'Agriculture City',
           state: 'CA',
           zipCode: '12345',
-          country: 'USA'
+          country: 'USA',
         },
         hours: {
           weekdays: '9:00 AM - 6:00 PM',
           weekends: '10:00 AM - 4:00 PM',
-          support: '24/7 Emergency Support Available'
+          support: '24/7 Emergency Support Available',
         },
         socialMedia: {
           facebook: 'https://facebook.com/farmtrade',
           twitter: 'https://twitter.com/farmtrade',
-          instagram: 'https://instagram.com/farmtrade'
-        }
+          instagram: 'https://instagram.com/farmtrade',
+        },
       };
     } catch (err) {
       console.error('Error in getContactInfo:', err);
@@ -156,7 +162,7 @@ class SupportService {
   async addMessageResponse(messageId, responderId, content) {
     try {
       const message = await Message.findById(messageId);
-      
+
       if (!message) {
         throw new Error('Message not found');
       }
@@ -164,7 +170,7 @@ class SupportService {
       message.responses.push({
         content,
         responderId,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       message.status = 'in_progress';
@@ -172,7 +178,7 @@ class SupportService {
 
       await message.populate([
         { path: 'userId', select: 'name email' },
-        { path: 'responses.responderId', select: 'name' }
+        { path: 'responses.responderId', select: 'name' },
       ]);
 
       return message;
@@ -183,4 +189,4 @@ class SupportService {
   }
 }
 
-module.exports = SupportService;
+export default SupportService;

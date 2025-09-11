@@ -1,6 +1,5 @@
-const Order = require('../models/Order');
-const Item = require('../models/Item');
-const User = require('../models/User');
+import Order from '../models/Order.js';
+import Item from '../models/Item.js';
 
 class OrderService {
   // Get user's orders with filtering and pagination
@@ -8,14 +7,11 @@ class OrderService {
     try {
       const { status, page = 1, limit = 10 } = options;
       const skip = (page - 1) * limit;
-      
+
       const query = {
-        $or: [
-          { buyerId: userId },
-          { sellerId: userId }
-        ]
+        $or: [{ buyerId: userId }, { sellerId: userId }],
       };
-      
+
       if (status) {
         query.status = status;
       }
@@ -36,8 +32,8 @@ class OrderService {
           page: parseInt(page),
           limit: parseInt(limit),
           total,
-          pages: Math.ceil(total / limit)
-        }
+          pages: Math.ceil(total / limit),
+        },
       };
     } catch (error) {
       console.error('Error in getUserOrders:', error);
@@ -50,14 +46,11 @@ class OrderService {
     try {
       const order = await Order.findOne({
         _id: orderId,
-        $or: [
-          { buyerId: userId },
-          { sellerId: userId }
-        ]
+        $or: [{ buyerId: userId }, { sellerId: userId }],
       })
-      .populate('buyerId', 'name email location rating')
-      .populate('sellerId', 'name email location rating')
-      .populate('productId', 'name images category description');
+        .populate('buyerId', 'name email location rating')
+        .populate('sellerId', 'name email location rating')
+        .populate('productId', 'name images category description');
 
       return order;
     } catch (error) {
@@ -90,7 +83,7 @@ class OrderService {
         sellerId: product.ownerId,
         productName: product.name,
         unit: product.unit,
-        pricePerUnit: product.price
+        pricePerUnit: product.price,
       });
 
       await order.save();
@@ -99,7 +92,7 @@ class OrderService {
       await order.populate([
         { path: 'buyerId', select: 'name email location' },
         { path: 'sellerId', select: 'name email location' },
-        { path: 'productId', select: 'name images category' }
+        { path: 'productId', select: 'name images category' },
       ]);
 
       return order;
@@ -113,7 +106,7 @@ class OrderService {
   async updateOrder(orderId, userId, updateData) {
     try {
       const order = await Order.findById(orderId);
-      
+
       if (!order) {
         return null;
       }
@@ -121,28 +114,37 @@ class OrderService {
       // Check permissions
       const isBuyer = order.buyerId.toString() === userId.toString();
       const isSeller = order.sellerId.toString() === userId.toString();
-      
+
       if (!isBuyer && !isSeller) {
         throw new Error('Access denied');
       }
 
       // Restrict what can be updated based on role and status
       const allowedUpdates = {};
-      
+
       if (isBuyer && order.canModify(userId)) {
         // Buyers can update shipping address and notes
-        if (updateData.shippingAddress) allowedUpdates.shippingAddress = updateData.shippingAddress;
+        if (updateData.shippingAddress)
+          allowedUpdates.shippingAddress = updateData.shippingAddress;
         if (updateData.notes) allowedUpdates.notes = updateData.notes;
       }
-      
+
       if (isSeller) {
         // Sellers can update status, tracking, and delivery dates
-        if (updateData.status && ['accepted', 'rejected', 'shipped', 'delivered'].includes(updateData.status)) {
+        if (
+          updateData.status &&
+          ['accepted', 'rejected', 'shipped', 'delivered'].includes(
+            updateData.status
+          )
+        ) {
           allowedUpdates.status = updateData.status;
         }
-        if (updateData.trackingNumber) allowedUpdates.trackingNumber = updateData.trackingNumber;
-        if (updateData.estimatedDelivery) allowedUpdates.estimatedDelivery = updateData.estimatedDelivery;
-        if (updateData.actualDelivery) allowedUpdates.actualDelivery = updateData.actualDelivery;
+        if (updateData.trackingNumber)
+          allowedUpdates.trackingNumber = updateData.trackingNumber;
+        if (updateData.estimatedDelivery)
+          allowedUpdates.estimatedDelivery = updateData.estimatedDelivery;
+        if (updateData.actualDelivery)
+          allowedUpdates.actualDelivery = updateData.actualDelivery;
       }
 
       const updatedOrder = await Order.findByIdAndUpdate(
@@ -152,7 +154,7 @@ class OrderService {
       ).populate([
         { path: 'buyerId', select: 'name email location' },
         { path: 'sellerId', select: 'name email location' },
-        { path: 'productId', select: 'name images category' }
+        { path: 'productId', select: 'name images category' },
       ]);
 
       return updatedOrder;
@@ -166,7 +168,7 @@ class OrderService {
   async cancelOrder(orderId, userId) {
     try {
       const order = await Order.findById(orderId);
-      
+
       if (!order) {
         return false;
       }
@@ -190,14 +192,11 @@ class OrderService {
     try {
       const order = await Order.findOne({
         _id: orderId,
-        $or: [
-          { buyerId: userId },
-          { sellerId: userId }
-        ]
+        $or: [{ buyerId: userId }, { sellerId: userId }],
       })
-      .populate('buyerId', 'name email location')
-      .populate('sellerId', 'name email location')
-      .populate('productId', 'name category');
+        .populate('buyerId', 'name email location')
+        .populate('sellerId', 'name email location')
+        .populate('productId', 'name category');
 
       if (!order) {
         return null;
@@ -216,7 +215,7 @@ class OrderService {
         pricePerUnit: order.pricePerUnit,
         totalPrice: order.totalPrice,
         status: order.status,
-        shippingAddress: order.shippingAddress
+        shippingAddress: order.shippingAddress,
       };
 
       return invoice;
@@ -227,4 +226,4 @@ class OrderService {
   }
 }
 
-module.exports = OrderService;
+export default OrderService;

@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const shelfController = require('../controllers/shelfController');
+import shelfController from '../controllers/shelfController.js';
 
 // All shelf routes require authentication (handled by app.js middleware)
 
@@ -22,4 +22,4 @@ router.delete('/items/:itemId', shelfController.deleteShelfItem);
 // GET shelf analytics
 router.get('/analytics', shelfController.getShelfAnalytics);
 
-module.exports = router;
+export default router;

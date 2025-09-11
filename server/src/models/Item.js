@@ -1,82 +1,105 @@
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const itemSchema = new mongoose.Schema({
-  name: { 
-    type: String, 
-    required: true,
-    trim: true,
-    maxlength: 100
-  },
-  description: {
-    type: String,
-    trim: true,
-    maxlength: 500
-  },
-  category: {
-    type: String,
-    required: true,
-    enum: ['Vegetables', 'Fruits', 'Grains', 'Herbs', 'Organic', 'Dairy', 'Poultry', 'Livestock']
-  },
-  quantity: { 
-    type: Number, 
-    required: true,
-    min: 0
-  },
-  unit: {
-    type: String,
-    required: true,
-    enum: ['bags', 'boxes', 'crates', 'kg', 'tons', 'pieces', 'bunches', 'liters']
-  },
-  price: { 
-    type: Number, 
-    required: true,
-    min: 0
-  },
-  ownerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  images: [{
-    type: String,
-    validate: {
-      validator: function(v) {
-        return /^https?:\/\/.+/.test(v);
+const itemSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100,
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    category: {
+      type: String,
+      required: true,
+      enum: [
+        'Vegetables',
+        'Fruits',
+        'Grains',
+        'Herbs',
+        'Organic',
+        'Dairy',
+        'Poultry',
+        'Livestock',
+      ],
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    unit: {
+      type: String,
+      required: true,
+      enum: [
+        'bags',
+        'boxes',
+        'crates',
+        'kg',
+        'tons',
+        'pieces',
+        'bunches',
+        'liters',
+      ],
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    ownerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    images: [
+      {
+        type: String,
+        validate: {
+          validator: function (v) {
+            return /^https?:\/\/.+/.test(v);
+          },
+          message: 'Invalid image URL',
+        },
       },
-      message: 'Invalid image URL'
-    }
-  }],
-  expiryDate: {
-    type: Date,
-    required: true
+    ],
+    expiryDate: {
+      type: Date,
+      required: true,
+    },
+    harvestDate: {
+      type: Date,
+    },
+    location: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+    },
+    organic: {
+      type: Boolean,
+      default: false,
+    },
+    available: {
+      type: Boolean,
+      default: true,
+    },
+    lowStockThreshold: {
+      type: Number,
+      default: 10,
+      min: 0,
+    },
   },
-  harvestDate: {
-    type: Date
-  },
-  location: {
-    type: String,
-    trim: true,
-    maxlength: 200
-  },
-  organic: {
-    type: Boolean,
-    default: false
-  },
-  available: {
-    type: Boolean,
-    default: true
-  },
-  lowStockThreshold: {
-    type: Number,
-    default: 10,
-    min: 0
+  {
+    timestamps: true,
   }
-}, {
-  timestamps: true
-});
+);
 
 // Virtual for low stock status
-itemSchema.virtual('lowStock').get(function() {
+itemSchema.virtual('lowStock').get(function () {
   return this.quantity <= this.lowStockThreshold;
 });
 
@@ -88,4 +111,4 @@ itemSchema.index({ expiryDate: 1 });
 // Ensure virtuals are included in JSON
 itemSchema.set('toJSON', { virtuals: true });
 
-module.exports = mongoose.model('Item', itemSchema);
+export default model('Item', itemSchema);

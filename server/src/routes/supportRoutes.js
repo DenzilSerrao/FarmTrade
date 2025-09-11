@@ -1,7 +1,6 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const supportController = require('../controllers/supportController');
-const { optionalAuth } = require('../middlewares/auth.middleware');
+import supportController from '../controllers/supportController.js';
 
 // GET FAQs (public)
 router.get('/faqs', supportController.getFAQs);
@@ -18,4 +17,4 @@ router.get('/messages/:messageId', supportController.getMessage);
 // GET contact information (public)
 router.get('/contact', supportController.getContactInfo);
 
-module.exports = router;
+export default router;
