@@ -8,30 +8,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  ScrollView,
 } from 'react-native';
 import { Link, router } from 'expo-router';
-import { Sprout, User, Mail, Phone, MapPin, Lock } from 'lucide-react-native';
+import { Sprout, Mail, Lock } from 'lucide-react-native';
 
-export default function RegisterScreen() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    location: '',
-    password: '',
-    confirmPassword: '',
-  });
+export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async () => {
-    if (!formData.name || !formData.email || !formData.phone || !formData.location || !formData.password) {
+  const handleLogin = async () => {
+    if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
       return;
     }
 
@@ -40,14 +28,8 @@ export default function RegisterScreen() {
     // Simulate API call
     setTimeout(() => {
       setLoading(false);
-      Alert.alert('Success', 'Account created successfully!', [
-        { text: 'OK', onPress: () => router.replace('/auth/login') }
-      ]);
+      router.replace('/(tabs)');
     }, 1500);
-  };
-
-  const updateFormData = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -55,54 +37,23 @@ export default function RegisterScreen() {
       style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.content}>
         <View style={styles.header}>
           <Sprout size={48} color="#22C55E" />
-          <Text style={styles.title}>Join FarmTrade</Text>
-          <Text style={styles.subtitle}>Start trading with fellow farmers</Text>
+          <Text style={styles.title}>FarmTrade</Text>
+          <Text style={styles.subtitle}>Connect. Trade. Grow.</Text>
         </View>
 
         <View style={styles.form}>
           <View style={styles.inputContainer}>
-            <User size={20} color="#6B7280" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Full Name"
-              value={formData.name}
-              onChangeText={(value) => updateFormData('name', value)}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
             <Mail size={20} color="#6B7280" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="Email Address"
-              value={formData.email}
-              onChangeText={(value) => updateFormData('email', value)}
+              placeholder="Email or Username"
+              value={email}
+              onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Phone size={20} color="#6B7280" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Phone Number"
-              value={formData.phone}
-              onChangeText={(value) => updateFormData('phone', value)}
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <MapPin size={20} color="#6B7280" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Farm Location"
-              value={formData.location}
-              onChangeText={(value) => updateFormData('location', value)}
             />
           </View>
 
@@ -111,43 +62,32 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               placeholder="Password"
-              value={formData.password}
-              onChangeText={(value) => updateFormData('password', value)}
-              secureTextEntry
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Lock size={20} color="#6B7280" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              value={formData.confirmPassword}
-              onChangeText={(value) => updateFormData('confirmPassword', value)}
+              value={password}
+              onChangeText={setPassword}
               secureTextEntry
             />
           </View>
 
           <TouchableOpacity 
             style={[styles.button, loading && styles.buttonDisabled]} 
-            onPress={handleRegister}
+            onPress={handleLogin}
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? 'Signing In...' : 'Sign In'}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
-            <Link href="/auth/login" asChild>
+            <Text style={styles.footerText}>Don't have an account? </Text>
+            <Link href="/auth/register" asChild>
               <TouchableOpacity>
-                <Text style={styles.linkText}>Sign In</Text>
+                <Text style={styles.linkText}>Register</Text>
               </TouchableOpacity>
             </Link>
           </View>
         </View>
-      </ScrollView>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -157,11 +97,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
-  scrollContent: {
-    flexGrow: 1,
+  content: {
+    flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 40,
   },
   header: {
     alignItems: 'center',
@@ -179,7 +118,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   form: {
-    gap: 16,
+    gap: 20,
   },
   inputContainer: {
     flexDirection: 'row',
