@@ -5,10 +5,11 @@ import { getStoredAuth } from '@/lib/auth';
 
 export default function IndexScreen() {
   const rootNavigationState = useRootNavigationState();
+  const navigationReady = rootNavigationState?.routes.length > 0;
 
   useEffect(() => {
     // Wait for the root navigation state to be loaded
-    if (!rootNavigationState?.isLoaded) {
+    if (!navigationReady) {
       return;
     }
 
@@ -21,7 +22,7 @@ export default function IndexScreen() {
     } else {
       router.replace('/onboarding');
     }
-  }, [rootNavigationState?.isLoaded]);
+  }, [navigationReady]);
 
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

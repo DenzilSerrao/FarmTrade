@@ -11,11 +11,6 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts",
-    "FarmersTradingBackend/src/middlewares/verifyUser.js",
-    "FarmersTradingBackend/src/middlewares/verifyOrganization.js",
-    "FarmersTradingBackend/src/middlewares/verifyAdmin.js",
-    "server/src/middlewares/auth.middleware.js",
-    "server/src/middlewares/verifyAdmin.js"
+    "nativewind-env.d.ts"
   ]
 }
