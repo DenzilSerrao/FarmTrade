@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { getStoredAuthAsync } from './auth';
+import { getStoredAuthAsync, clearStoredAuth } from './auth';
 import { ShelfItem } from '../types';
 import { Config } from './config';
 
@@ -27,12 +27,13 @@ api.interceptors.request.use(async (config) => {
 // Add response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
-    // if (error.response?.status === 401) {
-    //   // Handle unauthorized access
-    //   clearStoredAuth();
-    //   window.location.href = '/login';
-    // }
+  async (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized access
+      await clearStoredAuth();
+      // In React Native, you might want to navigate to login screen
+      // This would be handled by your navigation logic
+    }
     console.error('API Error:', error.response?.data); // Logging for verification
     return Promise.reject(error);
   }

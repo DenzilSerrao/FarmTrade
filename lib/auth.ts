@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { jwtDecode } from 'jwt-decode';
 import { User } from '../types';
 
@@ -6,8 +7,8 @@ interface DecodedToken {
   userId: string;
 }
 
-const AUTH_TOKEN_KEY = 'ana_beauty_token';
-const AUTH_USER_KEY = 'ana_beauty_user';
+const AUTH_TOKEN_KEY = 'farm_trade_token';
+const AUTH_USER_KEY = 'farm_trade_user';
 
 export const isValidToken = (token: string): boolean => {
   try {
@@ -19,34 +20,70 @@ export const isValidToken = (token: string): boolean => {
   }
 };
 
+// Synchronous version for immediate use (returns cached values)
 export const getStoredAuth = (): { token: string | null; user: User | null } => {
+  // This is a fallback that returns null - use getStoredAuthAsync for actual data
+  console.log("Use getStoredAuthAsync for React Native");
+  return { token: null, user: null };
+};
+
+// Async version for React Native
+export const getStoredAuthAsync = async (): Promise<{ token: string | null; user: User | null }> => {
   try {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    const userStr = localStorage.getItem(AUTH_USER_KEY);
-    console.log("Found token")
+    const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+    const userStr = await AsyncStorage.getItem(AUTH_USER_KEY);
+    
     if (!token || !userStr) {
-      //|| !isValidToken(token) to be debugged later
-      // clearStoredAuth();
-      console.log("Null token sent")
+      console.log("No stored auth found");
+      return { token: null, user: null };
+    }
+
+    // Validate token
+    if (!isValidToken(token)) {
+      console.log("Token expired, clearing auth");
+      await clearStoredAuth();
       return { token: null, user: null };
     }
 
     const user = JSON.parse(userStr);
-    console.log("sending token")
+    console.log("Found valid stored auth");
     return { token, user };
-  } catch {
-    // clearStoredAuth();
-    console.log("Null token sent")
+  } catch (error) {
+    console.error("Error getting stored auth:", error);
+    await clearStoredAuth();
     return { token: null, user: null };
   }
 };
 
-export const setStoredAuth = (token: string, user: User): void => {
-  localStorage.setItem(AUTH_TOKEN_KEY, token);
-  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+export const setStoredAuth = async (token: string, user: User): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(AUTH_TOKEN_KEY, token);
+    await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+    console.log("Auth stored successfully");
+  } catch (error) {
+    console.error("Error storing auth:", error);
+    throw error;
+  }
 };
 
-export const clearStoredAuth = (): void => {
-  localStorage.removeItem(AUTH_TOKEN_KEY);
-  localStorage.removeItem(AUTH_USER_KEY);
+export const clearStoredAuth = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+    await AsyncStorage.removeItem(AUTH_USER_KEY);
+    console.log("Auth cleared successfully");
+  } catch (error) {
+    console.error("Error clearing auth:", error);
+  }
+};
+
+// Helper function to get current user ID
+export const getCurrentUserId = async (): Promise<string | null> => {
+  const { user } = await getStoredAuthAsync();
+  return user?.id || null;
+};
+
+// Helper function to check if user is authenticated
+export const isAuthenticated = async (): Promise<boolean> => {
+  const { token, user } = await getStoredAuthAsync();
+  return !!(token && user);
 };
