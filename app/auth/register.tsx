@@ -8,16 +8,11 @@ import {
   Platform,
   ScrollView,
   Modal,
+  Alert,
 } from 'react-native';
-
-// Removed the styled import as it's deprecated in Nativewind v4+
-// import { styled } from 'nativewind';
-
-// No longer needed since styled() is no longer used
-// const StyledView = styled(View);
-// const StyledText = styled(Text);
-// const StyledTextInput = styled(TextInput);
-// const StyledTouchableOpacity = styled(TouchableOpacity);
+import { Link, router } from 'expo-router';
+import { register } from '@/lib/api';
+import { setStoredAuth } from '@/lib/auth';
 
 export default function CreateAccountScreen() {
   const [formData, setFormData] = useState({
@@ -27,50 +22,42 @@ export default function CreateAccountScreen() {
     confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-
-  const showMessage = (message: React.SetStateAction<string>) => {
-    setModalMessage(message);
-    setModalVisible(true);
-  };
 
   const handleRegister = async () => {
     // Validation
     if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      showMessage('Please fill in all required fields.');
+      Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      showMessage('Passwords do not match.');
+      Alert.alert('Error', 'Passwords do not match.');
       return;
     }
 
     if (formData.password.length < 6) {
-      showMessage('Password must be at least 6 characters long.');
+      Alert.alert('Error', 'Password must be at least 6 characters long.');
       return;
     }
 
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      // const response = await register(formData.name, formData.email, formData.password);
-      
-      const response = { success: true, message: 'Account created successfully!' };
+      const response = await register(formData.name, formData.email, formData.password);
       
       if (response.success) {
-        showMessage('Account created successfully!');
-        // In a real app, you would navigate to the next screen here
-        // router.replace('/(tabs)');
+        // Store auth data
+        await setStoredAuth(response.token, response.user);
+        
+        Alert.alert('Success', 'Account created successfully!', [
+          { text: 'OK', onPress: () => router.replace('/(tabs)') }
+        ]);
       } else {
-        showMessage(response.message || 'Registration failed.');
+        Alert.alert('Error', response.message || 'Registration failed.');
       }
     } catch (error) {
       console.error('Registration error:', error);
-      showMessage('Registration failed. Please try again.');
+      Alert.alert('Error', 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -173,37 +160,17 @@ export default function CreateAccountScreen() {
             <Text className="text-gray-500">
               Already have account?{' '}
             </Text>
-            <TouchableOpacity>
-              <Text className="text-gray-900 font-semibold underline">
-                Log in
-              </Text>
-            </TouchableOpacity>
+            <Link href="/auth/login" asChild>
+              <TouchableOpacity>
+                <Text className="text-gray-900 font-semibold underline">
+                  Log in
+                </Text>
+              </TouchableOpacity>
+            </Link>
           </View>
         </View>
       </ScrollView>
 
-      {/* Custom Modal for Messages */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(!modalVisible);
-        }}
-      >
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white p-6 rounded-lg w-3/4">
-            <Text className="text-lg font-bold mb-2">Message</Text>
-            <Text className="text-gray-700">{modalMessage}</Text>
-            <TouchableOpacity 
-              onPress={() => setModalVisible(false)}
-              className="mt-4 bg-gray-200 rounded-md py-2 px-4 items-center"
-            >
-              <Text>OK</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </KeyboardAvoidingView>
   );
 }

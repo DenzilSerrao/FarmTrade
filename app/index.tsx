@@ -1,27 +1,30 @@
 import { useEffect } from 'react';
 import { router, useRootNavigationState } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
-import { getStoredAuth } from '@/lib/auth';
+import { getStoredAuthAsync } from '@/lib/auth';
 
 export default function IndexScreen() {
   const rootNavigationState = useRootNavigationState();
   const navigationReady = rootNavigationState?.routes.length > 0;
 
   useEffect(() => {
-    // Wait for the root navigation state to be loaded
-    if (!navigationReady) {
-      return;
-    }
+    const checkAuth = async () => {
+      // Wait for the root navigation state to be loaded
+      if (!navigationReady) {
+        return;
+      }
+      // Check actual auth state
+      const { token, user } = await getStoredAuthAsync();
+      const isAuthenticated = !!(token && user);
+      
+      if (isAuthenticated) {
+        router.replace('/(tabs)');
+      } else {
+        router.replace('/onboarding');
+      }
+    };
 
-    // Check actual auth state
-    const { token, user } = getStoredAuth();
-    const isAuthenticated = !!(token && user);
-    
-    if (isAuthenticated) {
-      router.replace('/(tabs)');
-    } else {
-      router.replace('/onboarding');
-    }
+    checkAuth();
   }, [navigationReady]);
 
   return (

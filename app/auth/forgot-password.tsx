@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { ChevronLeft, Mail } from 'lucide-react-native';
+import { requestPasswordReset } from '@/lib/api';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
@@ -24,16 +25,19 @@ export default function ForgotPasswordScreen() {
     setLoading(true);
     
     try {
-      // Simulate API call for password reset
-      setTimeout(() => {
-        setLoading(false);
+      const response = await requestPasswordReset(email);
+      
+      if (response.success) {
         Alert.alert('Success', 'Password reset instructions sent to your email', [
           { text: 'OK', onPress: () => router.back() }
         ]);
-      }, 1500);
+      } else {
+        Alert.alert('Error', response.message || 'Failed to send reset email');
+      }
     } catch (error) {
-      setLoading(false);
       Alert.alert('Error', 'Failed to send reset email');
+    } finally {
+      setLoading(false);
     }
   };
 

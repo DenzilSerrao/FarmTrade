@@ -1,4 +1,5 @@
 import { jwtDecode } from 'jwt-decode';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../types';
 
 interface DecodedToken {
@@ -6,8 +7,8 @@ interface DecodedToken {
   userId: string;
 }
 
-const AUTH_TOKEN_KEY = 'ana_beauty_token';
-const AUTH_USER_KEY = 'ana_beauty_user';
+const AUTH_TOKEN_KEY = 'farmtrade_token';
+const AUTH_USER_KEY = 'farmtrade_user';
 
 export const isValidToken = (token: string): boolean => {
   try {
@@ -21,32 +22,52 @@ export const isValidToken = (token: string): boolean => {
 
 export const getStoredAuth = (): { token: string | null; user: User | null } => {
   try {
-    const token = localStorage.getItem(AUTH_TOKEN_KEY);
-    const userStr = localStorage.getItem(AUTH_USER_KEY);
-    console.log("Found token")
+    // For React Native, we'll use AsyncStorage but return synchronously for now
+    // In a real implementation, this should be async
+    const token = null; // Will be handled by async version
+    const userStr = null; // Will be handled by async version
+    
     if (!token || !userStr) {
-      //|| !isValidToken(token) to be debugged later
-      // clearStoredAuth();
-      console.log("Null token sent")
       return { token: null, user: null };
     }
 
     const user = JSON.parse(userStr);
-    console.log("sending token")
     return { token, user };
   } catch {
-    // clearStoredAuth();
-    console.log("Null token sent")
     return { token: null, user: null };
   }
 };
 
-export const setStoredAuth = (token: string, user: User): void => {
-  localStorage.setItem(AUTH_TOKEN_KEY, token);
-  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+// Async versions for React Native
+export const getStoredAuthAsync = async (): Promise<{ token: string | null; user: User | null }> => {
+  try {
+    const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+    const userStr = await AsyncStorage.getItem(AUTH_USER_KEY);
+    
+    if (!token || !userStr) {
+      return { token: null, user: null };
+    }
 };
 
-export const clearStoredAuth = (): void => {
-  localStorage.removeItem(AUTH_TOKEN_KEY);
-  localStorage.removeItem(AUTH_USER_KEY);
+    const user = JSON.parse(userStr);
+    return { token, user };
+  } catch {
+    return { token: null, user: null };
+  }
+};
+
+export const setStoredAuth = async (token: string, user: User): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(AUTH_TOKEN_KEY, token);
+    await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  } catch (error) {
+    console.error('Error storing auth data:', error);
+  }
+export const clearStoredAuth = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+    await AsyncStorage.removeItem(AUTH_USER_KEY);
+  } catch (error) {
+    console.error('Error clearing auth data:', error);
+  }
 };

@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { getStoredAuth } from './auth';
+import { getStoredAuthAsync } from './auth';
 import { ShelfItem } from '../types';
 import { Config } from './config';
 
@@ -12,13 +12,14 @@ const api = axios.create({
 });
 
 // Add request interceptor for authentication
-api.interceptors.request.use((config) => {
-  const { token } = getStoredAuth();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-    console.log('Token added to headers:', token); // Logging for verification
-  } else {
-    console.log('No token found in storage'); // Logging for verification
+api.interceptors.request.use(async (config) => {
+  try {
+    const { token } = await getStoredAuthAsync();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (error) {
+    console.error('Error getting token:', error);
   }
   return config;
 });
@@ -53,6 +54,16 @@ export const register = async (name: string, email: string, password: string) =>
 export const verifyToken = async (token: string) => {
   const response = await api.post('/auth/verify', { token });
   console.log('token verified:',response)
+  return response.data;
+};
+
+export const requestPasswordReset = async (email: string) => {
+  const response = await api.post('/auth/request-password-reset', { email });
+  return response.data;
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+  const response = await api.post('/auth/reset-password', { token, newPassword });
   return response.data;
 };
 

@@ -8,52 +8,41 @@ import {
   Platform,
   ScrollView,
   Modal,
+  Alert,
 } from 'react-native';
 import { Link, router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { login } from '../../lib/api';
-import { setStoredAuth } from '../../lib/auth';
+import { login } from '@/lib/api';
+import { setStoredAuth } from '@/lib/auth';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-
-  const showMessage = (message: React.SetStateAction<string>) => {
-    setModalMessage(message);
-    setModalVisible(true);
-  };
 
   const handleLogin = async () => {
     if (!email || !password) {
-      showMessage('Please fill in all fields.');
+      Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
 
     setLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      // const response = await login(email, password);
+      const response = await login(email, password);
 
-      const response = { success: true, message: 'Logged in successfully!' };
-      
       if (response.success) {
         // Store auth data
-        // await setStoredAuth(response.token, response.user);
+        await setStoredAuth(response.token, response.user);
         
-        showMessage('Logged in successfully!');
-        // In a real app, you would navigate to the next screen here
-        // router.replace('/(tabs)');
+        Alert.alert('Success', 'Logged in successfully!', [
+          { text: 'OK', onPress: () => router.replace('/(tabs)') }
+        ]);
       } else {
-        showMessage(response.message || 'Login failed.');
+        Alert.alert('Error', response.message || 'Login failed.');
       }
     } catch (error) {
       console.error('Login error:', error);
-      showMessage('Login failed. Please try again.');
+      Alert.alert('Error', 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -147,28 +136,6 @@ export default function LoginScreen() {
         </View>
       </ScrollView>
 
-      {/* Custom Modal for Messages */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(!modalVisible);
-        }}
-      >
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white p-6 rounded-lg w-3/4">
-            <Text className="text-lg font-bold mb-2">Message</Text>
-            <Text className="text-gray-700">{modalMessage}</Text>
-            <TouchableOpacity 
-              onPress={() => setModalVisible(false)}
-              className="mt-4 bg-gray-200 rounded-md py-2 px-4 items-center"
-            >
-              <Text>OK</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </KeyboardAvoidingView>
   );
 }
