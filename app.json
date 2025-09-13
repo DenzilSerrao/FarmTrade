@@ -34,7 +34,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "API_URL": "http://localhost:5000/api",
+      "API_URL": "srv-d32hkkidbo4c73aelpr0/api",
       "NODE_ENV": "development",
       "APP_NAME": "FarmTrade",
       "ENABLE_GOOGLE_AUTH": false,
