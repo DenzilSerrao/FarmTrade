@@ -58,6 +58,24 @@ app.use(
 app.use(passportInitialize());
 app.use(passportSession());
 
+// Handle OPTIONS requests for all routes
+app.options('*', (req, res) => {
+  res.setHeader(
+    'Access-Control-Allow-Origin',
+    process.env.FRONTEND_URL || 'http://localhost:8081'
+  );
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'GET, POST, PUT, DELETE, PATCH, OPTIONS'
+  );
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, x-access-token'
+  );
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.status(204).send();
+});
+
 // Health check endpoint with DB status
 app.get('/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState;
