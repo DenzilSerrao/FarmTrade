@@ -1,8 +1,7 @@
-import AuthService from '../services/authService.js';
-import User from '../models/User.js';
-import config from '../config.js';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
+import AuthService from "../services/authService.js";
+import User from "../models/User.js";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 // Login controller
 export const login = async (req, res) => {
@@ -13,7 +12,7 @@ export const login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required',
+        message: "Email and password are required",
       });
     }
 
@@ -21,10 +20,10 @@ export const login = async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Internal server error',
+      message: error.message || "Internal server error",
     });
   }
 };
@@ -38,7 +37,7 @@ export const register = async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Name, email, and password are required',
+        message: "Name, email, and password are required",
       });
     }
 
@@ -46,10 +45,10 @@ export const register = async (req, res) => {
 
     res.status(201).json(result);
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error("Registration error:", error);
     res.status(400).json({
       success: false,
-      message: error.message || 'Registration failed',
+      message: error.message || "Registration failed",
     });
   }
 };
@@ -62,13 +61,13 @@ export const logout = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Logout successful',
+      message: "Logout successful",
     });
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -81,7 +80,7 @@ export const requestPasswordReset = async (req, res) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'Email is required',
+        message: "Email is required",
       });
     }
 
@@ -90,7 +89,7 @@ export const requestPasswordReset = async (req, res) => {
       // Don't reveal if user exists or not for security
       return res.json({
         success: true,
-        message: 'If the email exists, a password reset link has been sent.',
+        message: "If the email exists, a password reset link has been sent.",
       });
     }
 
@@ -98,21 +97,21 @@ export const requestPasswordReset = async (req, res) => {
     const resetToken = jwt.sign(
       { userId: user.id, email: user.email },
       config.jwt.secret,
-      { expiresIn: '1h' }
+      { expiresIn: "1h" }
     );
 
     // TODO: Send password reset email here
-    console.log('Password reset token:', resetToken);
+    console.log("Password reset token:", resetToken);
 
     res.json({
       success: true,
-      message: 'If the email exists, a password reset link has been sent.',
+      message: "If the email exists, a password reset link has been sent.",
     });
   } catch (error) {
-    console.error('Password reset request error:', error);
+    console.error("Password reset request error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -125,7 +124,7 @@ export const resetPassword = async (req, res) => {
     if (!token || !newPassword) {
       return res.status(400).json({
         success: false,
-        message: 'Token and new password are required',
+        message: "Token and new password are required",
       });
     }
 
@@ -136,7 +135,7 @@ export const resetPassword = async (req, res) => {
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired reset token',
+        message: "Invalid or expired reset token",
       });
     }
 
@@ -150,23 +149,23 @@ export const resetPassword = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Password reset successful',
+      message: "Password reset successful",
     });
   } catch (error) {
     if (
-      error.name === 'JsonWebTokenError' ||
-      error.name === 'TokenExpiredError'
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError"
     ) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired reset token',
+        message: "Invalid or expired reset token",
       });
     }
 
-    console.error('Password reset error:', error);
+    console.error("Password reset error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -179,7 +178,7 @@ export const verifyEmail = async (req, res) => {
     if (!token) {
       return res.status(400).json({
         success: false,
-        message: 'Verification token is required',
+        message: "Verification token is required",
       });
     }
 
@@ -190,14 +189,14 @@ export const verifyEmail = async (req, res) => {
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired verification token',
+        message: "Invalid or expired verification token",
       });
     }
 
     if (user.verified) {
       return res.json({
         success: true,
-        message: 'Email is already verified',
+        message: "Email is already verified",
       });
     }
 
@@ -208,23 +207,23 @@ export const verifyEmail = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Email verified successfully',
+      message: "Email verified successfully",
     });
   } catch (error) {
     if (
-      error.name === 'JsonWebTokenError' ||
-      error.name === 'TokenExpiredError'
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError"
     ) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired verification token',
+        message: "Invalid or expired verification token",
       });
     }
 
-    console.error('Email verification error:', error);
+    console.error("Email verification error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -236,7 +235,7 @@ export const googleCallback = async (req, res) => {
     const { user } = req;
 
     if (!user) {
-      return res.redirect('/login?error=oauth_failed');
+      return res.redirect("/login?error=oauth_failed");
     }
 
     // Generate JWT token
@@ -245,8 +244,8 @@ export const googleCallback = async (req, res) => {
     // Redirect to frontend with token
     res.redirect(`/dashboard?token=${token}&auth=success`);
   } catch (error) {
-    console.error('Google OAuth callback error:', error);
-    res.redirect('/login?error=oauth_failed');
+    console.error("Google OAuth callback error:", error);
+    res.redirect("/login?error=oauth_failed");
   }
 };
 
@@ -257,7 +256,7 @@ export const facebookCallback = async (req, res) => {
     const { user } = req;
 
     if (!user) {
-      return res.redirect('/login?error=oauth_failed');
+      return res.redirect("/login?error=oauth_failed");
     }
 
     // Generate JWT token
@@ -266,7 +265,7 @@ export const facebookCallback = async (req, res) => {
     // Redirect to frontend with token
     res.redirect(`/dashboard?token=${token}&auth=success`);
   } catch (error) {
-    console.error('Facebook OAuth callback error:', error);
-    res.redirect('/login?error=oauth_failed');
+    console.error("Facebook OAuth callback error:", error);
+    res.redirect("/login?error=oauth_failed");
   }
 };
