@@ -2,6 +2,19 @@ import AuthService from "../services/authService.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import config from "../config/config.js"; // Add missing config import
+
+// Helper function to generate JWT token
+const generateToken = (user) => {
+  return jwt.sign(
+    {
+      userId: user._id || user.id,
+      email: user.email,
+    },
+    config.jwt.secret,
+    { expiresIn: config.jwt.expiresIn || "24h" }
+  );
+};
 
 // Login controller
 export const login = async (req, res) => {
@@ -16,14 +29,57 @@ export const login = async (req, res) => {
       });
     }
 
-    const result = await AuthService.login(email, password);
+    // Find user by email
+    const user = await User.findOne({ email }).select("+password");
 
-    res.json(result);
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid Email",
+      });
+    }
+
+    // Check if user is verified (optional)
+    if (user.verified === false) {
+      return res.status(401).json({
+        success: false,
+        message: "Please verify your email before logging in",
+      });
+    }
+
+    // Compare password with hashed password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+
+    // Generate JWT token
+    const token = generateToken(user);
+
+    // Remove password from user object before sending response
+    const userResponse = {
+      id: user._id || user.id,
+      name: user.name,
+      email: user.email,
+      verified: user.verified,
+      createdAt: user.createdAt,
+    };
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      token,
+      user: userResponse,
+    });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({
       success: false,
-      message: error.message || "Internal server error",
+      message: "Internal server error",
     });
   }
 };
@@ -41,9 +97,62 @@ export const register = async (req, res) => {
       });
     }
 
-    const result = await AuthService.register({ name, email, password });
+    // Additional password validation
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters long",
+      });
+    }
 
-    res.status(201).json(result);
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User with this email already exists",
+      });
+    }
+
+    // Hash password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create user
+    const user = new User({
+      name,
+      email,
+      password: hashedPassword,
+      verified: false, // User needs to verify email
+    });
+
+    await user.save();
+
+    // Generate verification token
+    const verificationToken = jwt.sign(
+      { userId: user._id, email: user.email },
+      config.jwt.secret,
+      { expiresIn: "24h" }
+    );
+
+    // TODO: Send verification email here
+    console.log("Verification token:", verificationToken);
+
+    // Remove password from response
+    const userResponse = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      verified: user.verified,
+      createdAt: user.createdAt,
+    };
+
+    res.status(201).json({
+      success: true,
+      message:
+        "Registration successful. Please check your email for verification.",
+      user: userResponse,
+    });
   } catch (error) {
     console.error("Registration error:", error);
     res.status(400).json({
@@ -95,7 +204,11 @@ export const requestPasswordReset = async (req, res) => {
 
     // Generate reset token
     const resetToken = jwt.sign(
-      { userId: user.id, email: user.email },
+      {
+        userId: user._id || user.id,
+        email: user.email,
+        type: "password_reset",
+      },
       config.jwt.secret,
       { expiresIn: "1h" }
     );
@@ -128,8 +241,25 @@ export const resetPassword = async (req, res) => {
       });
     }
 
+    // Additional password validation
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters long",
+      });
+    }
+
     // Verify reset token
     const decoded = jwt.verify(token, config.jwt.secret);
+
+    // Check if token is specifically for password reset
+    if (decoded.type !== "password_reset") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid reset token",
+      });
+    }
+
     const user = await User.findById(decoded.userId);
 
     if (!user) {
