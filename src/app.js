@@ -13,6 +13,7 @@ import shelfRoutes from "./routes/shelfRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
 import { verifyToken } from "./middlewares/auth.middleware.js";
+import mongoose from "mongoose";
 import connectDB from "./config/db.js"; // Import the database connection
 
 const app = express();
