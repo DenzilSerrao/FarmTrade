@@ -4,7 +4,7 @@ export default ({ config }) => {
   const envConfigs = {
     development: {
       API_URL: 'https://cropkart-pyyg.onrender.com/api',
-      FRONTEND_URL: 'http://localhost:8081',
+      FRONTEND_URL: 'https://cropkart-six.vercel.app/',
       GOOGLE_CLIENT_ID: 'your-google-client-id', // Safe to expose
       FACEBOOK_CLIENT_ID: 'your-facebook-client-id', // Safe to expose
       RAZORPAY_KEY_ID: 'rzp_test_your_key', // Safe to expose (public key)
@@ -16,7 +16,7 @@ export default ({ config }) => {
     },
     production: {
       API_URL: 'https://cropkart-pyyg.onrender.com/api',
-      FRONTEND_URL: 'https://cropkart.com',
+      FRONTEND_URL: 'https://cropkart-six.vercel.app/',
       GOOGLE_CLIENT_ID: 'your-prod-google-client-id',
       FACEBOOK_CLIENT_ID: 'your-prod-facebook-client-id',
       RAZORPAY_KEY_ID: 'rzp_live_your_key',

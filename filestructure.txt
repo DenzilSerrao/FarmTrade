@@ -1,12 +1,12 @@
 |-- .env
 |-- .expo
-    |-- devices.json
-    |-- README.md
-    |-- types
-        |-- router.d.ts
+    |-- web
 |-- .gitignore
 |-- .npmrc
 |-- .prettierrc
+|-- .vercel
+    |-- project.json
+    |-- README.txt
 |-- app
     |-- (tabs)
         |-- community.tsx
@@ -37,6 +37,7 @@
 |-- babel.config.js
 |-- components
     |-- StatusBadge.tsx
+|-- expo-env.d.ts
 |-- global.css
 |-- hooks
     |-- useFrameworkReady.ts
@@ -109,3 +110,4 @@
     |-- index.ts
 |-- utils
     |-- constants.ts
+|-- vercel.json
