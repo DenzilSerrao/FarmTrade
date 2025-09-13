@@ -1,5 +1,10 @@
 |-- .env
 |-- .env.example
+|-- .expo
+    |-- devices.json
+    |-- README.md
+    |-- types
+        |-- router.d.ts
 |-- .gitignore
 |-- CommodityAndCommodityHeads.csv
 |-- package-lock.json
