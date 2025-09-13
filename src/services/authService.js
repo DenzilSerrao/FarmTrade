@@ -1,8 +1,8 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import User from "../models/User.js";
-import config from "../config/auth.config.js";
-import emailService from "./emailService.js";
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import config from '../config/auth.config.js';
+import emailService from './emailService.js';
 
 class AuthService {
   // Generate JWT token
@@ -24,11 +24,16 @@ class AuthService {
       {
         userId: user._id,
         email: user.email,
-        type: "email_verification",
+        type: 'email_verification',
       },
       config.jwt.secret,
-      { expiresIn: "24h" }
+      { expiresIn: '24h' }
     );
+  }
+
+  // Generate 5-digit verification code
+  generateVerificationCode() {
+    return Math.floor(10000 + Math.random() * 90000).toString();
   }
 
   // Register new user
@@ -39,7 +44,7 @@ class AuthService {
       // Check if user already exists
       const existingUser = await User.findOne({ email });
       if (existingUser) {
-        throw new Error("User with this email already exists");
+        throw new Error('User with this email already exists');
       }
 
       // Hash password using config
@@ -48,31 +53,46 @@ class AuthService {
         config.security.saltRounds
       );
 
+      // Generate verification code and token
+      const verificationCode = this.generateVerificationCode();
+      const verificationToken = this.generateVerificationToken({
+        _id: 'temp',
+        email,
+      });
+
       // Create user
       const user = new User({
         name,
         email,
         password: hashedPassword,
         verified: false,
-        authProvider: "local",
+        authProvider: 'local',
+        verificationCode,
+        verificationCodeExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+        verificationToken,
       });
 
       await user.save();
 
-      // Generate tokens
+      // Generate auth token
       const token = this.generateToken(user);
-      const verificationToken = this.generateVerificationToken(user);
 
-      // Send welcome email with verification link
+      // Update verification token with actual user ID
+      const updatedVerificationToken = this.generateVerificationToken(user);
+      user.verificationToken = updatedVerificationToken;
+      await user.save();
+
+      // Send welcome email with both verification options
       try {
         await emailService.sendWelcomeEmail(
           user.email,
           user.name,
-          verificationToken
+          updatedVerificationToken,
+          verificationCode
         );
         console.log(`Welcome email sent to: ${user.email}`);
       } catch (emailError) {
-        console.error("Failed to send welcome email:", emailError);
+        console.error('Failed to send welcome email:', emailError);
         // Don't fail registration if email fails
       }
 
@@ -86,7 +106,7 @@ class AuthService {
           verified: user.verified,
         },
         message:
-          "Registration successful! Please check your email to verify your account.",
+          'Registration successful! Please check your email to verify your account.',
       };
     } catch (error) {
       throw error;
@@ -98,10 +118,10 @@ class AuthService {
     try {
       // Find user and include login attempt fields
       const user = await User.findOne({ email }).select(
-        "+password +loginAttempts +lockUntil"
+        '+password +loginAttempts +lockUntil'
       );
       if (!user) {
-        throw new Error("Invalid credentials");
+        throw new Error('Invalid credentials');
       }
 
       // Check if account is locked
@@ -116,7 +136,7 @@ class AuthService {
 
       // Check if user is verified
       if (!user.verified) {
-        throw new Error("Please verify your email before logging in");
+        throw new Error('Please verify your email before logging in');
       }
 
       // Check password
@@ -124,7 +144,7 @@ class AuthService {
       if (!isPasswordValid) {
         // Handle failed login attempt
         await this.handleFailedLoginAttempt(user);
-        throw new Error("Invalid credentials");
+        throw new Error('Invalid credentials');
       }
 
       // Reset login attempts on successful login
@@ -150,7 +170,7 @@ class AuthService {
           email: user.email,
           verified: user.verified,
         },
-        message: "Login successful",
+        message: 'Login successful',
       };
     } catch (error) {
       throw error;
@@ -176,48 +196,87 @@ class AuthService {
         `Invalid credentials. ${attemptsLeft} attempts remaining.`
       );
     } else {
-      throw new Error("Account locked due to too many failed attempts.");
+      throw new Error('Account locked due to too many failed attempts.');
     }
   }
 
-  // Verify email address
-  async verifyEmail(token) {
+  // Verify email address (supports both token and code)
+  async verifyEmail(tokenOrCode) {
     try {
-      const decoded = jwt.verify(token, config.jwt.secret);
+      // First try to verify as JWT token
+      try {
+        const decoded = jwt.verify(tokenOrCode, config.jwt.secret);
 
-      if (decoded.type !== "email_verification") {
-        throw new Error("Invalid verification token");
+        if (decoded.type !== 'email_verification') {
+          throw new Error('Invalid verification token');
+        }
+
+        const user = await User.findById(decoded.userId);
+        if (!user) {
+          throw new Error('User not found');
+        }
+
+        if (user.verified) {
+          return { success: true, message: 'Email already verified' };
+        }
+
+        // Update user verification status
+        user.verified = true;
+        user.emailVerifiedAt = new Date();
+        user.verificationCode = undefined;
+        user.verificationCodeExpires = undefined;
+        user.verificationToken = undefined;
+        await user.save();
+
+        return {
+          success: true,
+          message: 'Email verified successfully!',
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            verified: user.verified,
+          },
+        };
+      } catch (jwtError) {
+        // If JWT verification fails, try as verification code
+        const user = await User.findOne({
+          verificationCode: tokenOrCode,
+          verificationCodeExpires: { $gt: new Date() },
+        });
+
+        if (!user) {
+          throw new Error('Invalid or expired verification code');
+        }
+
+        if (user.verified) {
+          return { success: true, message: 'Email already verified' };
+        }
+
+        // Update user verification status
+        user.verified = true;
+        user.emailVerifiedAt = new Date();
+        user.verificationCode = undefined;
+        user.verificationCodeExpires = undefined;
+        user.verificationToken = undefined;
+        await user.save();
+
+        return {
+          success: true,
+          message: 'Email verified successfully!',
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            verified: user.verified,
+          },
+        };
       }
-
-      const user = await User.findById(decoded.userId);
-      if (!user) {
-        throw new Error("User not found");
-      }
-
-      if (user.verified) {
-        return { success: true, message: "Email already verified" };
-      }
-
-      // Update user verification status
-      user.verified = true;
-      user.emailVerifiedAt = new Date();
-      await user.save();
-
-      return {
-        success: true,
-        message: "Email verified successfully!",
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          verified: user.verified,
-        },
-      };
     } catch (error) {
-      if (error.name === "TokenExpiredError") {
-        throw new Error("Verification token has expired");
+      if (error.name === 'TokenExpiredError') {
+        throw new Error('Verification token has expired');
       }
-      throw new Error("Invalid verification token");
+      throw error;
     }
   }
 
@@ -229,30 +288,39 @@ class AuthService {
         // Don't reveal if user exists
         return {
           success: true,
-          message: "If email exists, verification email sent",
+          message: 'If email exists, verification email sent',
         };
       }
 
       if (user.verified) {
-        return { success: true, message: "Email is already verified" };
+        return { success: true, message: 'Email is already verified' };
       }
 
+      // Generate new verification code and token
+      const verificationCode = this.generateVerificationCode();
       const verificationToken = this.generateVerificationToken(user);
+
+      // Update user with new verification data
+      user.verificationCode = verificationCode;
+      user.verificationCodeExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      user.verificationToken = verificationToken;
+      await user.save();
 
       try {
         await emailService.sendWelcomeEmail(
           user.email,
           user.name,
-          verificationToken
+          verificationToken,
+          verificationCode
         );
         console.log(`Verification email resent to: ${user.email}`);
       } catch (emailError) {
-        console.error("Failed to resend verification email:", emailError);
+        console.error('Failed to resend verification email:', emailError);
       }
 
       return {
         success: true,
-        message: "If email exists, verification email sent",
+        message: 'If email exists, verification email sent',
       };
     } catch (error) {
       throw error;
@@ -266,7 +334,7 @@ class AuthService {
       const user = await User.findById(decoded.id);
 
       if (!user) {
-        throw new Error("User not found");
+        throw new Error('User not found');
       }
 
       return {
@@ -289,7 +357,7 @@ class AuthService {
       const user = await User.findOne({ email });
       if (!user) {
         // Don't reveal if user exists for security
-        return { success: true, message: "If email exists, reset link sent" };
+        return { success: true, message: 'If email exists, reset link sent' };
       }
 
       // Generate reset token using config
@@ -297,10 +365,10 @@ class AuthService {
         {
           userId: user._id,
           email: user.email,
-          type: "password_reset",
+          type: 'password_reset',
         },
         config.jwt.secret,
-        { expiresIn: "1h" }
+        { expiresIn: '1h' }
       );
 
       // Store reset token in database for additional security
@@ -313,17 +381,17 @@ class AuthService {
         await emailService.sendPasswordResetEmail(
           email,
           resetToken,
-          user.name || ""
+          user.name || ''
         );
         console.log(`Password reset email sent to: ${email}`);
       } catch (emailError) {
-        console.error("Email sending failed:", emailError);
+        console.error('Email sending failed:', emailError);
         // Don't throw error to maintain security - user shouldn't know if email failed
       }
 
-      return { success: true, message: "If email exists, reset link sent" };
+      return { success: true, message: 'If email exists, reset link sent' };
     } catch (error) {
-      console.error("Password reset request failed:", error);
+      console.error('Password reset request failed:', error);
       throw error;
     }
   }
@@ -333,24 +401,24 @@ class AuthService {
     try {
       const decoded = jwt.verify(token, config.jwt.secret);
 
-      if (decoded.type !== "password_reset") {
-        throw new Error("Invalid reset token");
+      if (decoded.type !== 'password_reset') {
+        throw new Error('Invalid reset token');
       }
 
       const user = await User.findById(decoded.userId);
 
       if (!user) {
-        throw new Error("Invalid or expired reset token");
+        throw new Error('Invalid or expired reset token');
       }
 
       // Check if token matches the one stored in database (additional security)
       if (user.passwordResetToken !== token) {
-        throw new Error("Invalid or expired reset token");
+        throw new Error('Invalid or expired reset token');
       }
 
       // Check if token has expired
       if (user.passwordResetExpires && user.passwordResetExpires < new Date()) {
-        throw new Error("Reset token has expired");
+        throw new Error('Reset token has expired');
       }
 
       // Hash new password using config
@@ -375,16 +443,16 @@ class AuthService {
         console.log(`Password change confirmation sent to: ${user.email}`);
       } catch (emailError) {
         console.error(
-          "Failed to send password change confirmation:",
+          'Failed to send password change confirmation:',
           emailError
         );
         // Don't fail the password reset if email fails
       }
 
-      return { success: true, message: "Password reset successful" };
+      return { success: true, message: 'Password reset successful' };
     } catch (error) {
-      if (error.name === "TokenExpiredError") {
-        throw new Error("Reset token has expired");
+      if (error.name === 'TokenExpiredError') {
+        throw new Error('Reset token has expired');
       }
       throw error;
     }
@@ -393,9 +461,9 @@ class AuthService {
   // Change password (for authenticated users)
   async changePassword(userId, currentPassword, newPassword) {
     try {
-      const user = await User.findById(userId).select("+password");
+      const user = await User.findById(userId).select('+password');
       if (!user) {
-        throw new Error("User not found");
+        throw new Error('User not found');
       }
 
       // Verify current password
@@ -404,7 +472,7 @@ class AuthService {
         user.password
       );
       if (!isCurrentPasswordValid) {
-        throw new Error("Current password is incorrect");
+        throw new Error('Current password is incorrect');
       }
 
       // Hash new password using config
@@ -427,12 +495,12 @@ class AuthService {
         console.log(`Password change confirmation sent to: ${user.email}`);
       } catch (emailError) {
         console.error(
-          "Failed to send password change confirmation:",
+          'Failed to send password change confirmation:',
           emailError
         );
       }
 
-      return { success: true, message: "Password changed successfully" };
+      return { success: true, message: 'Password changed successfully' };
     } catch (error) {
       throw error;
     }
@@ -486,7 +554,7 @@ class AuthService {
   // Logout (optional: for token blacklisting)
   async logout(token) {
     // If you implement token blacklisting, add logic here
-    return { success: true, message: "Logged out successfully" };
+    return { success: true, message: 'Logged out successfully' };
   }
 }
 

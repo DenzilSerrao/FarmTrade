@@ -55,7 +55,7 @@ class EmailService {
   // Send welcome/verification email
   async sendWelcomeEmail(email, userName, verificationToken = null) {
     const verificationUrl = verificationToken
-      ? `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`
+      ? `${process.env.API_URL}/verify-email?token=${verificationToken}`
       : null;
 
     const mailOptions = {
