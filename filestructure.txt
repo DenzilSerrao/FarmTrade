@@ -23,7 +23,6 @@
         |-- register.tsx
         |-- verification.tsx
         |-- _layout.tsx
-    |-- global.css
     |-- index.tsx
     |-- onboarding
         |-- index.tsx
@@ -40,6 +39,7 @@
 |-- components
     |-- StatusBadge.tsx
 |-- expo-env.d.ts
+|-- global.css
 |-- hooks
     |-- useFrameworkReady.ts
 |-- lib
@@ -49,6 +49,9 @@
     |-- config.ts
     |-- constants.ts
     |-- validation.ts
+|-- metro.config.js
+|-- nativewind-env.d.ts
+|-- output.css
 |-- package-lock.json
 |-- package.json
 |-- project.sln
