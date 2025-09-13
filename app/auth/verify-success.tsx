@@ -7,7 +7,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { router } from 'expo-router';
-import { CheckCircle } from 'lucide-react-native';
+import { CircleCheck as CheckCircle } from 'lucide-react-native';
 
 export default function VerifySuccessScreen() {
   useEffect(() => {
