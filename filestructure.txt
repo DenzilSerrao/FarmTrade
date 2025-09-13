@@ -6,7 +6,6 @@
 |-- package.json
 |-- README.md
 |-- Script.py
-|-- server
 |-- src
     |-- app.js
     |-- config
