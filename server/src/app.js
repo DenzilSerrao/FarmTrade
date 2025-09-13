@@ -27,7 +27,7 @@ app.use(
 );
 
 // Middlewares
-app.use(json({ limit: '10mb' }));
+app.use(json({ limit: '15mb' }));
 app.use(urlencoded({ extended: true }));
 
 // Session configuration for OAuth
