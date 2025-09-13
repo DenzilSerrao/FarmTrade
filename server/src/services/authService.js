@@ -203,67 +203,22 @@ class AuthService {
   // Verify email address (supports both token and code)
   async verifyEmail(tokenOrCode) {
     try {
-      // First try to verify as JWT token
-      try {
-        const decoded = jwt.verify(tokenOrCode, config.jwt.secret);
+      // Try to verify as JWT token
+      const decoded = jwt.verify(tokenOrCode, config.jwt.secret);
 
-        if (decoded.type !== 'email_verification') {
-          throw new Error('Invalid verification token');
-        }
+      if (decoded.type !== 'email_verification') {
+        throw new Error('Invalid verification token');
+      }
 
-        const user = await User.findById(decoded.userId);
-        if (!user) {
-          throw new Error('User not found');
-        }
+      const user = await User.findById(decoded.userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
 
-        if (user.verified) {
-          return { success: true, message: 'Email already verified' };
-        }
-
-        // Update user verification status
-        user.verified = true;
-        user.emailVerifiedAt = new Date();
-        user.verificationCode = undefined;
-        user.verificationCodeExpires = undefined;
-        user.verificationToken = undefined;
-        await user.save();
-
-        return {
-          success: true,
-          message: 'Email verified successfully!',
-          user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            verified: user.verified,
-          },
-        };
-      } catch (jwtError) {
-        // If JWT verification fails, try as verification code
-        const user = await User.findOne({
-          verificationCode: tokenOrCode,
-          verificationCodeExpires: { $gt: new Date() },
-        });
-
-        if (!user) {
-          throw new Error('Invalid or expired verification code');
-        }
-
-        if (user.verified) {
-          return { success: true, message: 'Email already verified' };
-        }
-
-        // Update user verification status
-        user.verified = true;
-        user.emailVerifiedAt = new Date();
-        user.verificationCode = undefined;
-        user.verificationCodeExpires = undefined;
-        user.verificationToken = undefined;
-        await user.save();
-
-        return {
-          success: true,
-          message: 'Email verified successfully!',
+      if (user.verified) {
+        return { 
+          success: true, 
+          message: 'Email already verified',
           user: {
             id: user._id,
             name: user.name,
@@ -272,9 +227,33 @@ class AuthService {
           },
         };
       }
+
+      // Update user verification status
+      user.verified = true;
+      user.emailVerifiedAt = new Date();
+      user.emailVerificationToken = undefined;
+      await user.save();
+
+      // Generate new auth token for the verified user
+      const newToken = this.generateToken(user);
+
+      return {
+        success: true,
+        message: 'Email verified successfully!',
+        token: newToken,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          verified: user.verified,
+        },
+      };
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
         throw new Error('Verification token has expired');
+      }
+      if (error.name === 'JsonWebTokenError') {
+        throw new Error('Invalid verification token');
       }
       throw error;
     }

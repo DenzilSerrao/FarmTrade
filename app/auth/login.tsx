@@ -48,6 +48,15 @@ export default function LoginScreen() {
     }
   };
 
+  const handleSocialLogin = (provider: 'google' | 'facebook' | 'apple') => {
+    // TODO: Implement social login
+    Alert.alert('Coming Soon', `${provider} login will be available soon!`);
+  };
+
+  const handleForgotPassword = () => {
+    router.push('/auth/forgot-password');
+  };
+
   return (
     <KeyboardAvoidingView 
       className="flex-1 bg-white" 
@@ -92,7 +101,7 @@ export default function LoginScreen() {
               />
             </View>
 
-            <TouchableOpacity className="self-end mb-10 mt-4">
+            <TouchableOpacity className="self-end mb-10 mt-4" onPress={handleForgotPassword}>
               <Text className="text-sm text-gray-500 font-normal">Forgot Password?</Text>
             </TouchableOpacity>
 
@@ -110,16 +119,25 @@ export default function LoginScreen() {
 
             {/* Social Login Options */}
             <View className="flex-row justify-center gap-6 mb-16">
-              <TouchableOpacity className="w-12 h-12 rounded-full bg-white items-center justify-center border border-gray-300">
-                <Text className="text-2xl font-semibold text-gray-700"></Text>
+              <TouchableOpacity 
+                className="w-12 h-12 rounded-full bg-white items-center justify-center border border-gray-300"
+                onPress={() => handleSocialLogin('apple')}
+              >
+                <Text className="text-2xl font-semibold text-gray-700"></Text>
               </TouchableOpacity>
               
-              <TouchableOpacity className="w-12 h-12 rounded-full bg-white items-center justify-center border border-gray-300">
-                <Text className="text-xl font-semibold text-gray-700">G</Text>
+              <TouchableOpacity 
+                className="w-12 h-12 rounded-full bg-white items-center justify-center border border-gray-300"
+                onPress={() => handleSocialLogin('google')}
+              >
+                <Text className="text-xl font-semibold text-blue-500">G</Text>
               </TouchableOpacity>
               
-              <TouchableOpacity className="w-12 h-12 rounded-full bg-white items-center justify-center border border-gray-300">
-                <Text className="text-xl font-semibold text-gray-700">f</Text>
+              <TouchableOpacity 
+                className="w-12 h-12 rounded-full bg-white items-center justify-center border border-gray-300"
+                onPress={() => handleSocialLogin('facebook')}
+              >
+                <Text className="text-xl font-semibold text-blue-600">f</Text>
               </TouchableOpacity>
             </View>
 

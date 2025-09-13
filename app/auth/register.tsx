@@ -46,12 +46,16 @@ export default function CreateAccountScreen() {
       const response = await register(formData.name, formData.email, formData.password);
       
       if (response.success) {
-        // Store auth data
-        await setStoredAuth(response.token, response.user);
+        // Store auth data but don't redirect yet since email needs verification
+        if (response.token && response.user) {
+          await setStoredAuth(response.token, response.user);
+        }
         
-        Alert.alert('Success', 'Account created successfully!', [
-          { text: 'OK', onPress: () => router.replace('/(tabs)') }
-        ]);
+        // Redirect to email sent screen
+        router.push({
+          pathname: '/auth/email-sent',
+          params: { email: formData.email }
+        });
       } else {
         Alert.alert('Error', response.message || 'Registration failed.');
       }
@@ -67,6 +71,10 @@ export default function CreateAccountScreen() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleSocialLogin = (provider: 'google' | 'facebook' | 'apple') => {
+    // TODO: Implement social login
+    Alert.alert('Coming Soon', `${provider} login will be available soon!`);
+  };
   return (
     <KeyboardAvoidingView 
       className="flex-1 bg-white" 
@@ -144,14 +152,23 @@ export default function CreateAccountScreen() {
             or sign up with
           </Text>
           <View className="flex-row justify-center space-x-6">
-            <TouchableOpacity className="w-12 h-12 rounded-full border border-gray-300 items-center justify-center">
-              <Text className="text-2xl"></Text>
+            <TouchableOpacity 
+              className="w-12 h-12 rounded-full border border-gray-300 items-center justify-center"
+              onPress={() => handleSocialLogin('apple')}
+            >
+              <Text className="text-2xl"></Text>
             </TouchableOpacity>
-            <TouchableOpacity className="w-12 h-12 rounded-full border border-gray-300 items-center justify-center">
-              <Text className="text-2xl">G</Text>
+            <TouchableOpacity 
+              className="w-12 h-12 rounded-full border border-gray-300 items-center justify-center"
+              onPress={() => handleSocialLogin('google')}
+            >
+              <Text className="text-2xl font-bold text-blue-500">G</Text>
             </TouchableOpacity>
-            <TouchableOpacity className="w-12 h-12 rounded-full border border-gray-300 items-center justify-center">
-              <Text className="text-2xl">f</Text>
+            <TouchableOpacity 
+              className="w-12 h-12 rounded-full border border-gray-300 items-center justify-center"
+              onPress={() => handleSocialLogin('facebook')}
+            >
+              <Text className="text-2xl font-bold text-blue-600">f</Text>
             </TouchableOpacity>
           </View>
 

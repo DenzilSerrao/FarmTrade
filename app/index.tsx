@@ -15,7 +15,7 @@ export default function IndexScreen() {
       }
       // Check actual auth state
       const { token, user } = await getStoredAuthAsync();
-      const isAuthenticated = !!(token && user);
+      const isAuthenticated = !!(token && user && user.verified);
       
       if (isAuthenticated) {
         router.replace('/(tabs)');

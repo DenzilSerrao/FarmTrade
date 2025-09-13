@@ -8,10 +8,13 @@ import {
   SafeAreaView,
   Alert,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
+import { verifyEmail } from '@/lib/api';
+import { setStoredAuth } from '@/lib/auth';
 
 export default function VerificationScreen() {
+  const { email } = useLocalSearchParams();
   const [code, setCode] = useState(['', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(10);
@@ -58,16 +61,25 @@ export default function VerificationScreen() {
     setLoading(true);
     
     try {
-      // Simulate API call for verification
-      setTimeout(() => {
-        setLoading(false);
+      const response = await verifyEmail(codeToVerify);
+      
+      if (response.success) {
+        // Store updated auth data if provided
+        if (response.token && response.user) {
+          await setStoredAuth(response.token, response.user);
+        }
+        
         Alert.alert('Success', 'Email verified successfully!', [
           { text: 'OK', onPress: () => router.replace('/(tabs)') }
         ]);
-      }, 1500);
+      } else {
+        Alert.alert('Error', response.message || 'Invalid verification code');
+      }
     } catch (error) {
+      console.error('Verification error:', error);
+      Alert.alert('Error', 'Verification failed. Please try again.');
+    } finally {
       setLoading(false);
-      Alert.alert('Error', 'Invalid verification code');
     }
   };
 
@@ -75,7 +87,8 @@ export default function VerificationScreen() {
     if (resendTimer > 0) return;
     
     setResendTimer(10);
-    Alert.alert('Success', 'Verification code resent to your email');
+    // TODO: Implement resend verification code API call
+    Alert.alert('Success', `Verification code resent to ${email}`);
   };
 
   return (
@@ -89,7 +102,8 @@ export default function VerificationScreen() {
       <View style={styles.content}>
         <Text style={styles.title}>Verification code</Text>
         <Text style={styles.description}>
-          Please enter the verification code we sent to your email address
+          Please enter the verification code we sent to{'\n'}
+          <Text style={styles.email}>{email}</Text>
         </Text>
 
         <View style={styles.codeContainer}>
@@ -230,6 +244,10 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     lineHeight: 24,
     marginBottom: 40,
+  },
+  email: {
+    fontWeight: '600',
+    color: '#1F2937',
   },
   codeContainer: {
     flexDirection: 'row',

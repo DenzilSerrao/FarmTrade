@@ -155,7 +155,7 @@ export const resetPassword = async (req, res) => {
 // Verify email
 export const verifyEmail = async (req, res) => {
   try {
-    const { token } = req.query;
+    const { token } = req.body;
 
     if (!token) {
       return res.status(400).json({

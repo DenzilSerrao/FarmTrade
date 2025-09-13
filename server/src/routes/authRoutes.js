@@ -25,7 +25,7 @@ router.post('/register', register);
 router.post('/logout', logout);
 router.post('/request-password-reset', requestPasswordReset);
 router.post('/reset-password', resetPassword);
-router.get('/verify-email', verifyEmail);
+router.post('/verify-email', verifyEmail);
 
 // Google OAuth start (redirects user to Google)
 router.get(
