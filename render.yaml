@@ -1,0 +1,19 @@
+# render.yaml
+services:
+  - type: web
+    name: farmers-trading-api
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        fromSecret: MONGODB_URI
+      - key: JWT_SECRET
+        fromSecret: JWT_SECRET
+      - key: SESSION_SECRET
+        fromSecret: SESSION_SECRET
+      - key: PORT
+        value: 5000

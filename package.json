@@ -1,22 +1,23 @@
 {
   "name": "FarmersTradingBackend",
   "version": "1.0.0",
+  "description": "Backend API for FarmTrade - Connecting farmers and traders",
   "main": "src/app.js",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
     "test": "jest",
     "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix"
+    "lint:fix": "eslint src/ --fix",
+    "build": "npm install"
   },
   "dependencies": {
     "axios": "^1.11.0",
-    "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.1",
     "cors": "^2.8.5",
-    "crypto": "^1.0.1",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-rate-limit": "^6.10.0",
