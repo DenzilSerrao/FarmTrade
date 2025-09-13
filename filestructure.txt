@@ -7,6 +7,7 @@
         |-- router.d.ts
 |-- .gitignore
 |-- CommodityAndCommodityHeads.csv
+|-- expo-env.d.ts
 |-- package-lock.json
 |-- package.json
 |-- README.md
