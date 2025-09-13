@@ -1,8 +1,8 @@
-import { Schema, model } from 'mongoose';
-import pkg from 'bcryptjs';
+import { Schema, model } from "mongoose";
+import pkg from "bcryptjs";
 const { hash, compare } = pkg;
-import jwt from 'jsonwebtoken';
-import config from '../config/auth.config.js';
+import jwt from "jsonwebtoken";
+import config from "../config/auth.config.js";
 
 const userSchema = new Schema(
   {
@@ -20,7 +20,7 @@ const userSchema = new Schema(
       trim: true,
       match: [
         /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-        'Please enter a valid email',
+        "Please enter a valid email",
       ],
     },
     password: {
@@ -28,12 +28,13 @@ const userSchema = new Schema(
       required: function () {
         return !this.googleId && !this.facebookId;
       },
-      minlength: 6,
+      minlength: 8,
+      select: false, // Exclude password from queries by default
     },
     phone: {
       type: String,
       trim: true,
-      match: [/^\+?[\d\s\-\(\)]+$/, 'Please enter a valid phone number'],
+      match: [/^\+?[\d\s\-\(\)]+$/, "Please enter a valid phone number"],
     },
     location: {
       type: String,
@@ -65,8 +66,8 @@ const userSchema = new Schema(
     },
     authProvider: {
       type: String,
-      enum: ['local', 'google', 'facebook'],
-      default: 'local',
+      enum: ["local", "google", "facebook"],
+      default: "local",
     },
     googleId: {
       type: String,
@@ -90,9 +91,9 @@ const userSchema = new Schema(
       type: Boolean,
       default: true,
     },
-    emailVerified: {
-      type: Boolean,
-      default: false,
+    emailVerifiedAt: {
+      type: Date,
+      default: null,
     },
     emailVerificationToken: {
       type: String,
@@ -106,6 +107,20 @@ const userSchema = new Schema(
       type: Date,
       default: null,
     },
+    passwordChangedAt: {
+      type: Date,
+      default: null,
+    },
+    // Rate limiting fields
+    loginAttempts: {
+      type: Number,
+      default: 0,
+      select: false, // Don't include in normal queries
+    },
+    lockUntil: {
+      type: Date,
+      select: false, // Don't include in normal queries
+    },
   },
   {
     timestamps: true,
@@ -114,6 +129,9 @@ const userSchema = new Schema(
         delete ret.password;
         delete ret.emailVerificationToken;
         delete ret.passwordResetToken;
+        delete ret.passwordResetExpires;
+        delete ret.loginAttempts;
+        delete ret.lockUntil;
         delete ret.__v;
         return ret;
       },
@@ -121,18 +139,27 @@ const userSchema = new Schema(
   }
 );
 
-// Index for performance
+// Indexes for performance
 userSchema.index({ email: 1 });
 userSchema.index({ googleId: 1 });
 userSchema.index({ facebookId: 1 });
+userSchema.index({ lockUntil: 1 });
+userSchema.index({ verified: 1 });
+userSchema.index({ isActive: 1 });
 
-// Pre-save middleware to hash password
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+// Pre-save middleware to hash password using config
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
 
   try {
-    const saltRounds = 12;
-    this.password = await hash(this.password, saltRounds);
+    // Use salt rounds from config
+    this.password = await hash(this.password, config.security.saltRounds);
+
+    // Update password change timestamp
+    if (!this.isNew) {
+      this.passwordChangedAt = new Date();
+    }
+
     next();
   } catch (error) {
     next(error);
@@ -145,7 +172,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   return compare(candidatePassword, this.password);
 };
 
-// Method to generate auth token
+// Method to generate auth token using config
 userSchema.methods.generateAuthToken = function () {
   return jwt.sign(
     {
@@ -158,4 +185,4 @@ userSchema.methods.generateAuthToken = function () {
   );
 };
 
-export default model('User', userSchema);
+export default model("User", userSchema);

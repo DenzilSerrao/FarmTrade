@@ -1,8 +1,4 @@
-import AuthService from '../services/authService.js';
-import User from '../models/User.js';
-import config from '../config.js';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
+import AuthService from "../services/authService.js";
 
 // Login controller
 export const login = async (req, res) => {
@@ -13,18 +9,33 @@ export const login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required',
+        message: "Email and password are required",
       });
     }
 
     const result = await AuthService.login(email, password);
-
     res.json(result);
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
+    console.error("Login error:", error);
+
+    // Handle specific error cases
+    if (error.message.includes("locked")) {
+      return res.status(423).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    if (error.message.includes("verify your email")) {
+      return res.status(401).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    res.status(401).json({
       success: false,
-      message: error.message || 'Internal server error',
+      message: error.message || "Login failed",
     });
   }
 };
@@ -38,18 +49,25 @@ export const register = async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Name, email, and password are required',
+        message: "Name, email, and password are required",
+      });
+    }
+
+    // Additional password validation
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters long",
       });
     }
 
     const result = await AuthService.register({ name, email, password });
-
     res.status(201).json(result);
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error("Registration error:", error);
     res.status(400).json({
       success: false,
-      message: error.message || 'Registration failed',
+      message: error.message || "Registration failed",
     });
   }
 };
@@ -57,18 +75,14 @@ export const register = async (req, res) => {
 // Logout controller
 export const logout = async (req, res) => {
   try {
-    // For JWT, logout is typically handled client-side by removing the token
-    // You might want to implement token blacklisting here if needed
-
-    res.json({
-      success: true,
-      message: 'Logout successful',
-    });
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    const result = await AuthService.logout(token);
+    res.json(result);
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -81,38 +95,17 @@ export const requestPasswordReset = async (req, res) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'Email is required',
+        message: "Email is required",
       });
     }
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      // Don't reveal if user exists or not for security
-      return res.json({
-        success: true,
-        message: 'If the email exists, a password reset link has been sent.',
-      });
-    }
-
-    // Generate reset token
-    const resetToken = jwt.sign(
-      { userId: user.id, email: user.email },
-      config.jwt.secret,
-      { expiresIn: '1h' }
-    );
-
-    // TODO: Send password reset email here
-    console.log('Password reset token:', resetToken);
-
-    res.json({
-      success: true,
-      message: 'If the email exists, a password reset link has been sent.',
-    });
+    const result = await AuthService.requestPasswordReset(email);
+    res.json(result);
   } catch (error) {
-    console.error('Password reset request error:', error);
+    console.error("Password reset request error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -125,48 +118,36 @@ export const resetPassword = async (req, res) => {
     if (!token || !newPassword) {
       return res.status(400).json({
         success: false,
-        message: 'Token and new password are required',
+        message: "Token and new password are required",
       });
     }
 
-    // Verify reset token
-    const decoded = jwt.verify(token, config.jwt.secret);
-    const user = await User.findById(decoded.userId);
-
-    if (!user) {
+    // Additional password validation
+    if (newPassword.length < 8) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired reset token',
+        message: "Password must be at least 8 characters long",
       });
     }
 
-    // Hash new password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    // Update password
-    user.password = hashedPassword;
-    await user.save();
-
-    res.json({
-      success: true,
-      message: 'Password reset successful',
-    });
+    const result = await AuthService.resetPassword(token, newPassword);
+    res.json(result);
   } catch (error) {
+    console.error("Password reset error:", error);
+
     if (
-      error.name === 'JsonWebTokenError' ||
-      error.name === 'TokenExpiredError'
+      error.message.includes("expired") ||
+      error.message.includes("Invalid")
     ) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired reset token',
+        message: error.message,
       });
     }
 
-    console.error('Password reset error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
     });
   }
 };
@@ -179,52 +160,125 @@ export const verifyEmail = async (req, res) => {
     if (!token) {
       return res.status(400).json({
         success: false,
-        message: 'Verification token is required',
+        message: "Verification token is required",
       });
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, config.jwt.secret);
-    const user = await User.findById(decoded.userId);
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid or expired verification token',
-      });
-    }
-
-    if (user.verified) {
-      return res.json({
-        success: true,
-        message: 'Email is already verified',
-      });
-    }
-
-    // Verify user
-    user.verified = true;
-    user.verifiedAt = new Date();
-    await user.save();
-
-    res.json({
-      success: true,
-      message: 'Email verified successfully',
-    });
+    const result = await AuthService.verifyEmail(token);
+    res.json(result);
   } catch (error) {
+    console.error("Email verification error:", error);
+
     if (
-      error.name === 'JsonWebTokenError' ||
-      error.name === 'TokenExpiredError'
+      error.message.includes("expired") ||
+      error.message.includes("Invalid")
     ) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired verification token',
+        message: error.message,
       });
     }
 
-    console.error('Email verification error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: "Internal server error",
+    });
+  }
+};
+
+// Resend verification email
+export const resendVerificationEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    const result = await AuthService.resendVerificationEmail(email);
+    res.json(result);
+  } catch (error) {
+    console.error("Resend verification error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Change password (for authenticated users)
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user?.id; // Assumes auth middleware sets req.user
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password and new password are required",
+      });
+    }
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    // Additional password validation
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters long",
+      });
+    }
+
+    const result = await AuthService.changePassword(
+      userId,
+      currentPassword,
+      newPassword
+    );
+    res.json(result);
+  } catch (error) {
+    console.error("Change password error:", error);
+
+    if (error.message.includes("incorrect")) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Verify token
+export const verifyToken = async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Token is required",
+      });
+    }
+
+    const result = await AuthService.verifyToken(token);
+    res.json(result);
+  } catch (error) {
+    console.error("Token verification error:", error);
+    res.status(401).json({
+      success: false,
+      message: "Invalid or expired token",
     });
   }
 };
@@ -232,41 +286,37 @@ export const verifyEmail = async (req, res) => {
 // Google OAuth callback
 export const googleCallback = async (req, res) => {
   try {
-    // Passport.js puts user info in req.user after successful OAuth
-    const { user } = req;
+    const { user } = req; // Set by Passport.js
 
     if (!user) {
-      return res.redirect('/login?error=oauth_failed');
+      return res.redirect("/login?error=oauth_failed");
     }
 
-    // Generate JWT token
-    const token = generateToken(user);
+    const result = await AuthService.handleOAuthUser(user, "google");
 
     // Redirect to frontend with token
-    res.redirect(`/dashboard?token=${token}&auth=success`);
+    res.redirect(`/dashboard?token=${result.token}&auth=success`);
   } catch (error) {
-    console.error('Google OAuth callback error:', error);
-    res.redirect('/login?error=oauth_failed');
+    console.error("Google OAuth callback error:", error);
+    res.redirect("/login?error=oauth_failed");
   }
 };
 
 // Facebook OAuth callback
 export const facebookCallback = async (req, res) => {
   try {
-    // Passport.js puts user info in req.user after successful OAuth
-    const { user } = req;
+    const { user } = req; // Set by Passport.js
 
     if (!user) {
-      return res.redirect('/login?error=oauth_failed');
+      return res.redirect("/login?error=oauth_failed");
     }
 
-    // Generate JWT token
-    const token = generateToken(user);
+    const result = await AuthService.handleOAuthUser(user, "facebook");
 
     // Redirect to frontend with token
-    res.redirect(`/dashboard?token=${token}&auth=success`);
+    res.redirect(`/dashboard?token=${result.token}&auth=success`);
   } catch (error) {
-    console.error('Facebook OAuth callback error:', error);
-    res.redirect('/login?error=oauth_failed');
+    console.error("Facebook OAuth callback error:", error);
+    res.redirect("/login?error=oauth_failed");
   }
 };

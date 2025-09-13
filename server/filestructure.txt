@@ -1,0 +1,49 @@
+|-- .env
+|-- .env.example
+|-- .gitignore
+|-- CommodityAndCommodityHeads.csv
+|-- expo-env.d.ts
+|-- package-lock.json
+|-- package.json
+|-- README.md
+|-- render.yaml
+|-- Script.py
+|-- src
+    |-- app.js
+    |-- config
+        |-- auth.config.js
+        |-- db.js
+        |-- passport.js
+    |-- controllers
+        |-- authController.js
+        |-- dashboardController.js
+        |-- ordersController.js
+        |-- profileController.js
+        |-- shelfController.js
+        |-- supportController.js
+    |-- middlewares
+        |-- auth.middleware.js
+        |-- verifyAdmin.ts
+        |-- verifyUser.ts
+    |-- models
+        |-- Admin.js
+        |-- Item.js
+        |-- Message.js
+        |-- Notification.js
+        |-- Order.js
+        |-- User.js
+    |-- routes
+        |-- authRoutes.js
+        |-- dashboardRoutes.js
+        |-- ordersRoutes.js
+        |-- profileRoutes.js
+        |-- shelfRoutes.js
+        |-- supportRoutes.js
+    |-- services
+        |-- authService.js
+        |-- dashboardService.js
+        |-- emailService.js
+        |-- orderService.js
+        |-- profileService.js
+        |-- shelfService.js
+        |-- supportService.js

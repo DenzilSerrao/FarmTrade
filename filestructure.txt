@@ -1,4 +1,9 @@
 |-- .env
+|-- .expo
+    |-- devices.json
+    |-- README.md
+    |-- types
+        |-- router.d.ts
 |-- .gitignore
 |-- .npmrc
 |-- .prettierrc
@@ -49,11 +54,15 @@
 |-- package.json
 |-- project.sln
 |-- server
+    |-- .env
     |-- .env.example
+    |-- .gitignore
     |-- CommodityAndCommodityHeads.csv
+    |-- expo-env.d.ts
     |-- package-lock.json
     |-- package.json
     |-- README.md
+    |-- render.yaml
     |-- Script.py
     |-- src
         |-- app.js
