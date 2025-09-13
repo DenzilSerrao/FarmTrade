@@ -1,110 +1,46 @@
 |-- .env
-|-- .expo
-    |-- devices.json
-    |-- README.md
-    |-- types
-        |-- router.d.ts
-    |-- web
-|-- .gitignore
-|-- .npmrc
-|-- .prettierrc
-|-- app
-    |-- (tabs)
-        |-- community.tsx
-        |-- index.tsx
-        |-- orders.tsx
-        |-- profile.tsx
-        |-- shelf.tsx
-        |-- _layout.tsx
-    |-- +not-found.tsx
-    |-- auth
-        |-- forgot-password.tsx
-        |-- login.tsx
-        |-- register.tsx
-        |-- verification.tsx
-        |-- _layout.tsx
-    |-- index.tsx
-    |-- onboarding
-        |-- index.tsx
-        |-- _layout.tsx
-    |-- _layout.tsx
-|-- app.config.js
-|-- app.config.production.js
-|-- app.json
-|-- assets
-    |-- images
-        |-- favicon.png
-        |-- icon.png
-|-- babel.config.js
-|-- components
-    |-- StatusBadge.tsx
-|-- expo-env.d.ts
-|-- global.css
-|-- hooks
-    |-- useFrameworkReady.ts
-|-- lib
-    |-- api.ts
-    |-- auth.ts
-    |-- axios.ts
-    |-- config.ts
-    |-- constants.ts
-    |-- validation.ts
-|-- metro.config.js
-|-- nativewind-env.d.ts
-|-- output.css
+|-- .env.example
+|-- CommodityAndCommodityHeads.csv
 |-- package-lock.json
 |-- package.json
-|-- project.sln
-|-- server
-    |-- .env
-    |-- .env.example
-    |-- CommodityAndCommodityHeads.csv
-    |-- package-lock.json
-    |-- package.json
-    |-- README.md
-    |-- Script.py
-    |-- src
-        |-- app.js
-        |-- config
-            |-- auth.config.js
-            |-- db.js
-            |-- passport.js
-        |-- controllers
-            |-- authController.js
-            |-- dashboardController.js
-            |-- ordersController.js
-            |-- profileController.js
-            |-- shelfController.js
-            |-- supportController.js
-        |-- middlewares
-            |-- auth.middleware.js
-            |-- verifyAdmin.ts
-            |-- verifyUser.ts
-        |-- models
-            |-- Admin.js
-            |-- Item.js
-            |-- Message.js
-            |-- Notification.js
-            |-- Order.js
-            |-- User.js
-        |-- routes
-            |-- authRoutes.js
-            |-- dashboardRoutes.js
-            |-- ordersRoutes.js
-            |-- profileRoutes.js
-            |-- shelfRoutes.js
-            |-- supportRoutes.js
-        |-- services
-            |-- authService.js
-            |-- dashboardService.js
-            |-- emailService.js
-            |-- orderService.js
-            |-- profileService.js
-            |-- shelfService.js
-            |-- supportService.js
-|-- tailwind.config.js
-|-- tsconfig.json
-|-- types
-    |-- index.ts
-|-- utils
-    |-- constants.ts
+|-- README.md
+|-- Script.py
+|-- src
+    |-- app.js
+    |-- config
+        |-- auth.config.js
+        |-- db.js
+        |-- passport.js
+    |-- controllers
+        |-- authController.js
+        |-- dashboardController.js
+        |-- ordersController.js
+        |-- profileController.js
+        |-- shelfController.js
+        |-- supportController.js
+    |-- middlewares
+        |-- auth.middleware.js
+        |-- verifyAdmin.ts
+        |-- verifyUser.ts
+    |-- models
+        |-- Admin.js
+        |-- Item.js
+        |-- Message.js
+        |-- Notification.js
+        |-- Order.js
+        |-- User.js
+    |-- routes
+        |-- authRoutes.js
+        |-- dashboardRoutes.js
+        |-- ordersRoutes.js
+        |-- profileRoutes.js
+        |-- shelfRoutes.js
+        |-- supportRoutes.js
+    |-- services
+        |-- authService.js
+        |-- dashboardService.js
+        |-- emailService.js
+        |-- orderService.js
+        |-- profileService.js
+        |-- shelfService.js
+        |-- supportService.js
