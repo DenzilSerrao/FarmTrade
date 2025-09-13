@@ -97,6 +97,7 @@
         |-- services
             |-- authService.js
             |-- dashboardService.js
+            |-- emailService.js
             |-- orderService.js
             |-- profileService.js
             |-- shelfService.js

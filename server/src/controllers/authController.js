@@ -1,4 +1,8 @@
 import AuthService from '../services/authService.js';
+import User from '../models/User.js';
+import config from '../config.js';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 // Login controller
 export const login = async (req, res) => {
