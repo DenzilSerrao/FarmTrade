@@ -1,3 +1,4 @@
+|-- .env
 |-- .gitignore
 |-- .npmrc
 |-- .prettierrc
@@ -48,7 +49,6 @@
 |-- package.json
 |-- project.sln
 |-- server
-    |-- .env
     |-- .env.example
     |-- CommodityAndCommodityHeads.csv
     |-- package-lock.json
