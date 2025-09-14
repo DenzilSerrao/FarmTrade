@@ -175,31 +175,6 @@ userSchema.index({ verificationCode: 1 }, { sparse: true });
 userSchema.index({ verificationCodeExpires: 1 }, { sparse: true });
 userSchema.index({ verificationToken: 1 }, { sparse: true });
 
-// Pre-save middleware to hash password using config
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-
-  try {
-    // Use salt rounds from config
-    this.password = await hash(this.password, config.security.saltRounds);
-
-    // Update password change timestamp
-    if (!this.isNew) {
-      this.passwordChangedAt = new Date();
-    }
-
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Method to compare password
-userSchema.methods.comparePassword = async function (candidatePassword) {
-  if (!this.password) return false;
-  return compare(candidatePassword, this.password);
-};
-
 // Method to generate auth token using config
 userSchema.methods.generateAuthToken = function () {
   return jwt.sign(
