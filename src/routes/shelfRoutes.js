@@ -4,7 +4,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import shelfService from '../services/shelfService.js';
-import { authMiddleware } from '../middleware/auth.js';
+import { verifyToken as authMiddleware } from '../middlewares/auth.middleware.js';
 import {
   imageConfig,
   imageUtils,

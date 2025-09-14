@@ -1,7 +1,7 @@
 // routes/orderRoutes.js - Complete Order Routes
 import express from 'express';
 import orderService from '../services/orderService.js';
-import { authMiddleware } from '../middleware/auth.middleware.js';
+import { verifyToken as authMiddleware } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
