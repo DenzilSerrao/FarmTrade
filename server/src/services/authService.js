@@ -121,7 +121,7 @@ class AuthService {
         '+password +loginAttempts +lockUntil'
       );
       if (!user) {
-        throw new Error('Invalid credentials');
+        throw new Error('Missing credentials');
       }
 
       // Check if account is locked
@@ -176,7 +176,6 @@ class AuthService {
       throw error;
     }
   }
-
   // Handle failed login attempts with rate limiting
   async handleFailedLoginAttempt(user) {
     const loginAttempts = (user.loginAttempts || 0) + 1;
