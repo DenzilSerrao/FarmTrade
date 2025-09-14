@@ -146,7 +146,7 @@ class AuthService {
         'Password:',
         user.password,
         'vs',
-        password
+        await bcrypt.hash(password, config.security.saltRounds)
       );
       // Check password
       const isPasswordValid = await bcrypt.compare(password, user.password);
