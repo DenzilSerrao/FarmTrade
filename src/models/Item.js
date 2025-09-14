@@ -1,4 +1,34 @@
+// models/Item.js - Enhanced Product Model
 import { Schema, model } from 'mongoose';
+
+const imageSchema = new Schema({
+  filename: {
+    type: String,
+    required: true,
+  },
+  originalName: {
+    type: String,
+    required: true,
+  },
+  variants: {
+    thumbnail: { filename: String, url: String },
+    medium: { filename: String, url: String },
+    large: { filename: String, url: String },
+    original: { filename: String, url: String },
+  },
+  alt: {
+    type: String,
+    default: '',
+  },
+  isPrimary: {
+    type: Boolean,
+    default: false,
+  },
+  uploadedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
 const itemSchema = new Schema(
   {
@@ -10,22 +40,30 @@ const itemSchema = new Schema(
     },
     description: {
       type: String,
-      trim: true,
-      maxlength: 500,
+      required: true,
+      maxlength: 1000,
     },
     category: {
       type: String,
       required: true,
       enum: [
-        'Vegetables',
-        'Fruits',
-        'Grains',
-        'Herbs',
-        'Organic',
-        'Dairy',
-        'Poultry',
-        'Livestock',
+        'vegetables',
+        'fruits',
+        'grains',
+        'pulses',
+        'spices',
+        'herbs',
+        'dairy',
+        'meat',
+        'poultry',
+        'fish',
+        'other',
       ],
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
     },
     quantity: {
       type: Number,
@@ -35,80 +73,83 @@ const itemSchema = new Schema(
     unit: {
       type: String,
       required: true,
-      enum: [
-        'bags',
-        'boxes',
-        'crates',
-        'kg',
-        'tons',
-        'pieces',
-        'bunches',
-        'liters',
-      ],
+      enum: ['kg', 'gram', 'liter', 'piece', 'dozen', 'quintal', 'ton'],
     },
-    price: {
+    minOrderQuantity: {
       type: Number,
-      required: true,
-      min: 0,
+      default: 1,
+      min: 1,
     },
+    lowStockThreshold: {
+      type: Number,
+      default: 10,
+    },
+    images: [imageSchema],
     ownerId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
-    images: [
-      {
-        type: String,
-        validate: {
-          validator: function (v) {
-            return /^https?:\/\/.+/.test(v);
-          },
-          message: 'Invalid image URL',
-        },
-      },
-    ],
-    expiryDate: {
-      type: Date,
-      required: true,
-    },
-    harvestDate: {
-      type: Date,
-    },
-    location: {
-      type: String,
-      trim: true,
-      maxlength: 200,
+    available: {
+      type: Boolean,
+      default: true,
     },
     organic: {
       type: Boolean,
       default: false,
     },
-    available: {
+    harvestDate: {
+      type: Date,
+    },
+    expiryDate: {
+      type: Date,
+    },
+    location: {
+      type: String,
+      trim: true,
+    },
+    qualityGrade: {
+      type: String,
+      enum: ['A', 'B', 'C'],
+      default: 'B',
+    },
+    tags: [String],
+    views: {
+      type: Number,
+      default: 0,
+    },
+    isActive: {
       type: Boolean,
       default: true,
-    },
-    lowStockThreshold: {
-      type: Number,
-      default: 10,
-      min: 0,
     },
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-// Virtual for low stock status
+// Virtual for low stock check
 itemSchema.virtual('lowStock').get(function () {
   return this.quantity <= this.lowStockThreshold;
 });
 
-// Index for performance
-itemSchema.index({ ownerId: 1, available: 1 });
-itemSchema.index({ category: 1, available: 1 });
-itemSchema.index({ expiryDate: 1 });
+// Virtual for days until expiry
+itemSchema.virtual('daysUntilExpiry').get(function () {
+  if (!this.expiryDate) return null;
+  const now = new Date();
+  const expiry = new Date(this.expiryDate);
+  const diffTime = expiry - now;
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+});
 
-// Ensure virtuals are included in JSON
-itemSchema.set('toJSON', { virtuals: true });
+// Indexes
+itemSchema.index({ ownerId: 1 });
+itemSchema.index({ category: 1 });
+itemSchema.index({ available: 1 });
+itemSchema.index({ name: 'text', description: 'text' });
+itemSchema.index({ price: 1 });
+itemSchema.index({ createdAt: -1 });
 
 export default model('Item', itemSchema);

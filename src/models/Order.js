@@ -1,16 +1,25 @@
+// models/Order.js - Enhanced Order Model
 import { Schema, model } from 'mongoose';
 
-const OrderSchema = new Schema(
+const orderSchema = new Schema(
   {
-    productName: {
-      type: String,
+    buyerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true,
-      trim: true,
-      maxlength: 100,
+    },
+    sellerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
     productId: {
       type: Schema.Types.ObjectId,
       ref: 'Item',
+      required: true,
+    },
+    productName: {
+      type: String,
       required: true,
     },
     quantity: {
@@ -21,16 +30,6 @@ const OrderSchema = new Schema(
     unit: {
       type: String,
       required: true,
-      enum: [
-        'bags',
-        'boxes',
-        'crates',
-        'kg',
-        'tons',
-        'pieces',
-        'bunches',
-        'liters',
-      ],
     },
     pricePerUnit: {
       type: Number,
@@ -42,22 +41,13 @@ const OrderSchema = new Schema(
       required: true,
       min: 0,
     },
-    buyerId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    sellerId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
     status: {
       type: String,
       enum: [
         'pending',
         'accepted',
         'rejected',
+        'packed',
         'shipped',
         'delivered',
         'cancelled',
@@ -65,79 +55,78 @@ const OrderSchema = new Schema(
       default: 'pending',
     },
     shippingAddress: {
-      street: { type: String, required: true },
-      city: { type: String, required: true },
-      state: { type: String, required: true },
-      zipCode: { type: String, required: true },
+      street: String,
+      city: String,
+      state: String,
+      pincode: String,
       country: { type: String, default: 'India' },
     },
+    notes: String,
+    sellerNotes: String,
+    trackingNumber: String,
+    requestedDeliveryDate: Date,
+    estimatedDelivery: Date,
+
+    // Status timestamps
+    acceptedAt: Date,
+    rejectedAt: Date,
+    shippedAt: Date,
+    deliveredAt: Date,
+    cancelledAt: Date,
+
+    // Cancellation info
+    cancellationReason: String,
+    cancelledBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+
+    // Rating and review
+    buyerRating: {
+      type: Number,
+      min: 1,
+      max: 5,
+    },
+    buyerReview: String,
+
+    // Payment info (for future implementation)
     paymentStatus: {
       type: String,
       enum: ['pending', 'paid', 'failed', 'refunded'],
       default: 'pending',
     },
-    paymentMethod: {
-      type: String,
-      enum: ['cash', 'card', 'upi', 'bank_transfer'],
-      default: 'cash',
-    },
-    estimatedDelivery: {
-      type: Date,
-    },
-    actualDelivery: {
-      type: Date,
-    },
-    trackingNumber: {
-      type: String,
-      sparse: true,
-    },
-    notes: {
-      type: String,
-      maxlength: 500,
-    },
-    rating: {
-      type: Number,
-      min: 1,
-      max: 5,
-    },
-    review: {
-      type: String,
-      maxlength: 500,
-    },
+    paymentMethod: String,
   },
   {
     timestamps: true,
   }
 );
 
-// Indexes for performance
-OrderSchema.index({ buyerId: 1, status: 1 });
-OrderSchema.index({ sellerId: 1, status: 1 });
-OrderSchema.index({ status: 1, createdAt: -1 });
-OrderSchema.index({ estimatedDelivery: 1 });
+// Instance methods
+orderSchema.methods.canCancel = function (userId) {
+  const isBuyer = this.buyerId.toString() === userId.toString();
+  const isSeller = this.sellerId.toString() === userId.toString();
 
-// Pre-save middleware to calculate total price
-OrderSchema.pre('save', function (next) {
-  if (this.isModified('quantity') || this.isModified('pricePerUnit')) {
-    this.totalPrice = this.quantity * this.pricePerUnit;
-  }
-  next();
-});
+  if (!isBuyer && !isSeller) return false;
 
-// Method to check if user can modify order
-OrderSchema.methods.canModify = function (userId) {
-  return (
-    this.buyerId.toString() === userId.toString() &&
-    ['pending', 'accepted'].includes(this.status)
-  );
+  // Buyers can cancel if order is pending or accepted
+  if (isBuyer && ['pending', 'accepted'].includes(this.status)) return true;
+
+  // Sellers can cancel if order is pending
+  if (isSeller && this.status === 'pending') return true;
+
+  return false;
 };
 
-// Method to check if user can cancel order
-OrderSchema.methods.canCancel = function (userId) {
-  return (
-    this.buyerId.toString() === userId.toString() &&
-    ['pending', 'accepted'].includes(this.status)
-  );
+orderSchema.methods.canModify = function (userId) {
+  const isBuyer = this.buyerId.toString() === userId.toString();
+  return isBuyer && this.status === 'pending';
 };
 
-export default model('Order', OrderSchema);
+// Indexes
+orderSchema.index({ buyerId: 1 });
+orderSchema.index({ sellerId: 1 });
+orderSchema.index({ status: 1 });
+orderSchema.index({ createdAt: -1 });
+
+export default model('Order', orderSchema);
