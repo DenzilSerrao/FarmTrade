@@ -121,7 +121,7 @@ class AuthService {
         '+password +loginAttempts +lockUntil'
       );
       if (!user) {
-        throw new Error('Invalid credentials');
+        throw new Error('Missing credentials');
       }
 
       // Check if account is locked
@@ -138,7 +138,16 @@ class AuthService {
       if (!user.verified) {
         throw new Error('Please verify your email before logging in');
       }
-
+      console.log(
+        'User found:',
+        user.email,
+        'Verified:',
+        user.verified,
+        'Password:',
+        user.password,
+        'vs',
+        password
+      );
       // Check password
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
