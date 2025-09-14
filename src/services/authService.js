@@ -47,11 +47,25 @@ class AuthService {
         throw new Error('User with this email already exists');
       }
 
+      // DEBUG: Log original password details
+      console.log('=== REGISTRATION DEBUG ===');
+      console.log('Original password:', password);
+      console.log('Password length:', password.length);
+      console.log('Password type:', typeof password);
+      console.log('Password bytes:', Buffer.from(password).toString('hex'));
+
       // Hash password using config
       const hashedPassword = await bcrypt.hash(
         password,
         config.security.saltRounds
       );
+
+      console.log('Hashed password:', hashedPassword);
+      console.log('Hash length:', hashedPassword.length);
+
+      // CRITICAL DEBUG: Test the hash immediately after creation
+      const immediateTest = await bcrypt.compare(password, hashedPassword);
+      console.log('Immediate hash test (should be true):', immediateTest);
 
       // Generate verification code and token
       const verificationCode = this.generateVerificationCode();
@@ -59,12 +73,7 @@ class AuthService {
         _id: 'temp',
         email,
       });
-      console.log(
-        'Password vs Hashed password:',
-        password,
-        ' ',
-        hashedPassword
-      );
+
       // Create user
       const user = new User({
         name,
@@ -78,6 +87,19 @@ class AuthService {
       });
 
       await user.save();
+
+      // DEBUG: Verify what was actually saved to database
+      const savedUser = await User.findOne({ email }).select('+password');
+      console.log('Saved password hash:', savedUser.password);
+      console.log(
+        'Hash matches what we created:',
+        savedUser.password === hashedPassword
+      );
+
+      // CRITICAL: Test the saved hash
+      const savedHashTest = await bcrypt.compare(password, savedUser.password);
+      console.log('Saved hash test (should be true):', savedHashTest);
+      console.log('=======================');
 
       // Generate auth token
       const token = this.generateToken(user);
