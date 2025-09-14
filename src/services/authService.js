@@ -59,7 +59,12 @@ class AuthService {
         _id: 'temp',
         email,
       });
-
+      console.log(
+        'Password vs Hashed password:',
+        password,
+        ' ',
+        hashedPassword
+      );
       // Create user
       const user = new User({
         name,
