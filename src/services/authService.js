@@ -37,6 +37,7 @@ class AuthService {
   }
 
   // Register new user
+  // Register new user - SUPER DETAILED DEBUG
   async register(userData) {
     try {
       const { name, email, password } = userData;
@@ -47,12 +48,9 @@ class AuthService {
         throw new Error('User with this email already exists');
       }
 
-      // DEBUG: Log original password details
       console.log('=== REGISTRATION DEBUG ===');
       console.log('Original password:', password);
-      console.log('Password length:', password.length);
-      console.log('Password type:', typeof password);
-      console.log('Password bytes:', Buffer.from(password).toString('hex'));
+      console.log('Salt rounds from config:', config.security.saltRounds);
 
       // Hash password using config
       const hashedPassword = await bcrypt.hash(
@@ -61,11 +59,10 @@ class AuthService {
       );
 
       console.log('Hashed password:', hashedPassword);
-      console.log('Hash length:', hashedPassword.length);
 
-      // CRITICAL DEBUG: Test the hash immediately after creation
+      // Test the hash immediately
       const immediateTest = await bcrypt.compare(password, hashedPassword);
-      console.log('Immediate hash test (should be true):', immediateTest);
+      console.log('Immediate hash test:', immediateTest);
 
       // Generate verification code and token
       const verificationCode = this.generateVerificationCode();
@@ -74,7 +71,9 @@ class AuthService {
         email,
       });
 
-      // Create user
+      console.log('About to create user object...');
+
+      // Create user object (but don't save yet)
       const user = new User({
         name,
         email,
@@ -82,23 +81,58 @@ class AuthService {
         verified: false,
         authProvider: 'local',
         verificationCode,
-        verificationCodeExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+        verificationCodeExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
         verificationToken,
       });
 
-      await user.save();
-
-      // DEBUG: Verify what was actually saved to database
-      const savedUser = await User.findOne({ email }).select('+password');
-      console.log('Saved password hash:', savedUser.password);
+      console.log('User object created, password field:', user.password);
       console.log(
-        'Hash matches what we created:',
+        'Password still matches hash:',
+        user.password === hashedPassword
+      );
+
+      // Test hash before save
+      const beforeSaveTest = await bcrypt.compare(password, user.password);
+      console.log('Before save test:', beforeSaveTest);
+
+      console.log('About to save user...');
+      await user.save();
+      console.log('User saved successfully');
+
+      // Immediately fetch the saved user
+      const savedUser = await User.findOne({ email }).select('+password');
+      console.log('Fetched saved user password:', savedUser.password);
+      console.log(
+        'Saved password matches original hash:',
         savedUser.password === hashedPassword
       );
 
-      // CRITICAL: Test the saved hash
+      // Test the saved hash
       const savedHashTest = await bcrypt.compare(password, savedUser.password);
-      console.log('Saved hash test (should be true):', savedHashTest);
+      console.log('Saved hash test:', savedHashTest);
+
+      // If hashes don't match, let's see what might have changed
+      if (savedUser.password !== hashedPassword) {
+        console.log('🚨 HASH MISMATCH DETECTED!');
+        console.log('Original hash length:', hashedPassword.length);
+        console.log('Saved hash length:', savedUser.password.length);
+        console.log(
+          'Original hash starts with:',
+          hashedPassword.substring(0, 10)
+        );
+        console.log(
+          'Saved hash starts with:',
+          savedUser.password.substring(0, 10)
+        );
+
+        // Check if it's being hashed again
+        const isDoubleHashed = await bcrypt.compare(
+          hashedPassword,
+          savedUser.password
+        );
+        console.log('Is original hash being hashed again?', isDoubleHashed);
+      }
+
       console.log('=======================');
 
       // Generate auth token
@@ -109,7 +143,7 @@ class AuthService {
       user.verificationToken = updatedVerificationToken;
       await user.save();
 
-      // Send welcome email with both verification options
+      // Send welcome email
       try {
         await emailService.sendWelcomeEmail(
           user.email,
@@ -120,7 +154,6 @@ class AuthService {
         console.log(`Welcome email sent to: ${user.email}`);
       } catch (emailError) {
         console.error('Failed to send welcome email:', emailError);
-        // Don't fail registration if email fails
       }
 
       return {
@@ -136,10 +169,10 @@ class AuthService {
           'Registration successful! Please check your email to verify your account.',
       };
     } catch (error) {
+      console.error('Registration error:', error);
       throw error;
     }
   }
-
   // Login user with rate limiting
   async login(email, password) {
     try {
