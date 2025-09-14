@@ -52,22 +52,20 @@ class EmailService {
     }
   }
 
-  // Send welcome/verification email with both web button and 5-digit code
-  async sendWelcomeEmail(email, userName, verificationToken, verificationCode) {
+  // Send welcome/verification email
+  async sendWelcomeEmail(email, userName, verificationToken = null) {
     const verificationUrl = verificationToken
-      ? `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`
+      ? `${
+          process.env.FRONTEND_URL || 'https://cropkart-six.vercel.app'
+        }/auth/verify-email?token=${verificationToken}`
       : null;
 
     const mailOptions = {
       from: this.fromAddress,
       to: email,
       subject: `Welcome to ${process.env.APP_NAME || 'Our App'}!`,
-      html: this.getWelcomeTemplate(
-        userName,
-        verificationUrl,
-        verificationCode
-      ),
-      text: this.getWelcomeText(userName, verificationUrl, verificationCode),
+      html: this.getWelcomeTemplate(userName, verificationUrl),
+      text: this.getWelcomeText(userName, verificationUrl),
     };
 
     try {
@@ -192,47 +190,18 @@ ${process.env.APP_NAME || 'Your App'} Team
     `.trim();
   }
 
-  getWelcomeTemplate(userName, verificationUrl, verificationCode) {
-    const verificationSection =
-      verificationUrl && verificationCode
-        ? `
-      <div style="background: #e7f3ff; padding: 25px; border-radius: 8px; margin: 25px 0; border: 1px solid #cce7ff;">
-        <h3 style="color: #0066cc; margin-top: 0;">📧 Verify Your Email Address</h3>
-        
-        <!-- Web Verification Button -->
-        <div style="text-align: center; margin: 25px 0;">
-          <a href="${verificationUrl}" 
-             style="display: inline-block; background: #28a745; color: white !important; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            ✅ Verify Email on Web
-          </a>
-        </div>
-        
-        <div style="text-align: center; margin: 20px 0; color: #666; font-weight: bold;">
-          OR
-        </div>
-        
-        <!-- Mobile App Code Section -->
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; border: 2px dashed #007bff;">
-          <h4 style="color: #333; margin-top: 0;">For Mobile App Users:</h4>
-          <p style="margin: 10px 0; color: #666;">Enter this verification code in the app:</p>
-          <div style="background: white; padding: 15px 25px; margin: 15px 0; border-radius: 8px; border: 2px solid #007bff; display: inline-block;">
-            <span style="font-family: 'Courier New', monospace; font-size: 24px; font-weight: bold; color: #007bff; letter-spacing: 3px;">${verificationCode}</span>
-          </div>
-          <p style="font-size: 12px; color: #666; margin-bottom: 0;">
-            <strong>Code expires in 24 hours</strong>
-          </p>
-        </div>
-        
-        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 5px; border-left: 4px solid #ffc107;">
-          <p style="margin: 0; font-size: 14px; color: #856404;">
-            <strong>💡 Choose your preferred method:</strong><br>
-            • Click the button above to verify on our website<br>
-            • Or use the 5-digit code in your mobile app
-          </p>
-        </div>
+  getWelcomeTemplate(userName, verificationUrl) {
+    const verificationSection = verificationUrl
+      ? `
+      <div style="background: #e7f3ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3>📧 Verify Your Email</h3>
+        <p>Please click the button below to verify your email address:</p>
+        <p style="text-align: center;">
+          <a href="${verificationUrl}" class="button" style="background: #28a745;">Verify Email</a>
+        </p>
       </div>
     `
-        : '';
+      : '';
 
     return `
       <!DOCTYPE html>
@@ -242,10 +211,9 @@ ${process.env.APP_NAME || 'Your App'} Team
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Welcome!</title>
         <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f7f7f7; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: white; }
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
           .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px; margin-bottom: 30px; }
-          .content { padding: 0 10px; }
           .button { 
             display: inline-block; 
             background: #007bff; 
@@ -256,32 +224,26 @@ ${process.env.APP_NAME || 'Your App'} Team
             margin: 10px 0; 
             font-weight: bold;
           }
-          .footer { font-size: 12px; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; }
+          .footer { font-size: 12px; color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1 style="margin: 0; font-size: 28px;">🎉 Welcome to ${
-              process.env.APP_NAME || 'Our App'
-            }!</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">We're excited to have you on board!</p>
+            <h1>🎉 Welcome to ${process.env.APP_NAME || 'Our App'}!</h1>
           </div>
           
           <div class="content">
-            <h2 style="color: #333;">Hello ${userName}!</h2>
-            <p>Thank you for joining us. To get started and secure your account, please verify your email address.</p>
+            <h2>Hello ${userName}!</h2>
+            <p>Thank you for joining us. We're excited to have you on board!</p>
             
             ${verificationSection}
             
-            <p>Once verified, you'll have full access to all our features. If you have any questions or need assistance, our support team is here to help.</p>
+            <p>If you have any questions, feel free to reach out to our support team.</p>
           </div>
           
           <div class="footer">
-            <p>Best regards,<br><strong>${
-              process.env.APP_NAME || 'Your App'
-            } Team</strong></p>
-            <p style="margin-top: 15px;"><em>This is an automated message, please don't reply to this email.</em></p>
+            <p>Best regards,<br>${process.env.APP_NAME || 'Your App'} Team</p>
           </div>
         </div>
       </body>
@@ -289,24 +251,13 @@ ${process.env.APP_NAME || 'Your App'} Team
     `;
   }
 
-  getWelcomeText(userName, verificationUrl, verificationCode) {
-    const verificationText =
-      verificationUrl && verificationCode
-        ? `
-EMAIL VERIFICATION REQUIRED
-============================
-
-Choose your preferred verification method:
-
-🌐 WEB VERIFICATION:
-Click this link: ${verificationUrl}
-
-📱 MOBILE APP VERIFICATION:
-Enter this 5-digit code in the app: ${verificationCode}
-
-(Code expires in 24 hours)
-      `
-        : '';
+  getWelcomeText(userName, verificationUrl) {
+    const verificationText = verificationUrl
+      ? `
+Please verify your email address by clicking this link:
+${verificationUrl}
+    `
+      : '';
 
     return `
 Welcome to ${process.env.APP_NAME || 'Our App'}!
@@ -315,8 +266,6 @@ Hello ${userName}!
 
 Thank you for joining us. We're excited to have you on board!
 ${verificationText}
-Once verified, you'll have full access to all our features.
-
 If you have any questions, feel free to reach out to our support team.
 
 Best regards,
