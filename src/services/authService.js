@@ -150,6 +150,7 @@ class AuthService {
       );
       // Check password
       const isPasswordValid = await bcrypt.compare(password, user.password);
+      console.log('Is password valid:', isPasswordValid);
       if (!isPasswordValid) {
         // Handle failed login attempt
         await this.handleFailedLoginAttempt(user);
