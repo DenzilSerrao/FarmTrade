@@ -37,7 +37,6 @@ class AuthService {
   }
 
   // Register new user
-  // Register new user - SUPER DETAILED DEBUG
   async register(userData) {
     try {
       const { name, email, password } = userData;
@@ -48,21 +47,11 @@ class AuthService {
         throw new Error('User with this email already exists');
       }
 
-      console.log('=== REGISTRATION DEBUG ===');
-      console.log('Original password:', password);
-      console.log('Salt rounds from config:', config.security.saltRounds);
-
       // Hash password using config
       const hashedPassword = await bcrypt.hash(
         password,
         config.security.saltRounds
       );
-
-      console.log('Hashed password:', hashedPassword);
-
-      // Test the hash immediately
-      const immediateTest = await bcrypt.compare(password, hashedPassword);
-      console.log('Immediate hash test:', immediateTest);
 
       // Generate verification code and token
       const verificationCode = this.generateVerificationCode();
@@ -71,9 +60,7 @@ class AuthService {
         email,
       });
 
-      console.log('About to create user object...');
-
-      // Create user object (but don't save yet)
+      // Create user
       const user = new User({
         name,
         email,
@@ -81,59 +68,11 @@ class AuthService {
         verified: false,
         authProvider: 'local',
         verificationCode,
-        verificationCodeExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        verificationCodeExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
         verificationToken,
       });
 
-      console.log('User object created, password field:', user.password);
-      console.log(
-        'Password still matches hash:',
-        user.password === hashedPassword
-      );
-
-      // Test hash before save
-      const beforeSaveTest = await bcrypt.compare(password, user.password);
-      console.log('Before save test:', beforeSaveTest);
-
-      console.log('About to save user...');
       await user.save();
-      console.log('User saved successfully');
-
-      // Immediately fetch the saved user
-      const savedUser = await User.findOne({ email }).select('+password');
-      console.log('Fetched saved user password:', savedUser.password);
-      console.log(
-        'Saved password matches original hash:',
-        savedUser.password === hashedPassword
-      );
-
-      // Test the saved hash
-      const savedHashTest = await bcrypt.compare(password, savedUser.password);
-      console.log('Saved hash test:', savedHashTest);
-
-      // If hashes don't match, let's see what might have changed
-      if (savedUser.password !== hashedPassword) {
-        console.log('🚨 HASH MISMATCH DETECTED!');
-        console.log('Original hash length:', hashedPassword.length);
-        console.log('Saved hash length:', savedUser.password.length);
-        console.log(
-          'Original hash starts with:',
-          hashedPassword.substring(0, 10)
-        );
-        console.log(
-          'Saved hash starts with:',
-          savedUser.password.substring(0, 10)
-        );
-
-        // Check if it's being hashed again
-        const isDoubleHashed = await bcrypt.compare(
-          hashedPassword,
-          savedUser.password
-        );
-        console.log('Is original hash being hashed again?', isDoubleHashed);
-      }
-
-      console.log('=======================');
 
       // Generate auth token
       const token = this.generateToken(user);
@@ -143,7 +82,7 @@ class AuthService {
       user.verificationToken = updatedVerificationToken;
       await user.save();
 
-      // Send welcome email
+      // Send welcome email with both verification options
       try {
         await emailService.sendWelcomeEmail(
           user.email,
@@ -154,6 +93,7 @@ class AuthService {
         console.log(`Welcome email sent to: ${user.email}`);
       } catch (emailError) {
         console.error('Failed to send welcome email:', emailError);
+        // Don't fail registration if email fails
       }
 
       return {
@@ -169,10 +109,10 @@ class AuthService {
           'Registration successful! Please check your email to verify your account.',
       };
     } catch (error) {
-      console.error('Registration error:', error);
       throw error;
     }
   }
+
   // Login user with rate limiting
   async login(email, password) {
     try {
@@ -198,28 +138,9 @@ class AuthService {
       if (!user.verified) {
         throw new Error('Please verify your email before logging in');
       }
-      // Debug logs - FIXED VERSION
-      console.log('=== LOGIN DEBUG ===');
-      console.log('User found:', user.email);
-      console.log('User verified:', user.verified);
-      console.log('Input password:', password);
-      console.log('Stored hash:', user.password);
-      console.log(
-        'Hash length:',
-        user.password ? user.password.length : 'undefined'
-      );
-      // Test with a known password/hash pair
-      const testPassword = 'test123';
-      const testHash = await bcrypt.hash(
-        testPassword,
-        config.security.saltRounds
-      );
-      const testResult = await bcrypt.compare(testPassword, testHash);
-      console.log('Test bcrypt comparison:', testResult); // Should be true
-      console.log('=================');
+
       // Check password
       const isPasswordValid = await bcrypt.compare(password, user.password);
-      console.log('Is password valid:', isPasswordValid);
       if (!isPasswordValid) {
         // Handle failed login attempt
         await this.handleFailedLoginAttempt(user);
@@ -255,7 +176,6 @@ class AuthService {
       throw error;
     }
   }
-
   // Handle failed login attempts with rate limiting
   async handleFailedLoginAttempt(user) {
     const loginAttempts = (user.loginAttempts || 0) + 1;
