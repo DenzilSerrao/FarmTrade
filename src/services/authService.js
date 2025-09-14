@@ -143,16 +143,25 @@ class AuthService {
       if (!user.verified) {
         throw new Error('Please verify your email before logging in');
       }
+      // Debug logs - FIXED VERSION
+      console.log('=== LOGIN DEBUG ===');
+      console.log('User found:', user.email);
+      console.log('User verified:', user.verified);
+      console.log('Input password:', password);
+      console.log('Stored hash:', user.password);
       console.log(
-        'User found:',
-        user.email,
-        'Verified:',
-        user.verified,
-        'Password:',
-        user.password,
-        'vs',
-        await bcrypt.hash(password, config.security.saltRounds)
+        'Hash length:',
+        user.password ? user.password.length : 'undefined'
       );
+      // Test with a known password/hash pair
+      const testPassword = 'test123';
+      const testHash = await bcrypt.hash(
+        testPassword,
+        config.security.saltRounds
+      );
+      const testResult = await bcrypt.compare(testPassword, testHash);
+      console.log('Test bcrypt comparison:', testResult); // Should be true
+      console.log('=================');
       // Check password
       const isPasswordValid = await bcrypt.compare(password, user.password);
       console.log('Is password valid:', isPasswordValid);
