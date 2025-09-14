@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 class EmailService {
   constructor() {
     // Configure your email transporter
-    this.transporter = nodemailer.createTransporter({
+    this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER, // your-email@gmail.com
