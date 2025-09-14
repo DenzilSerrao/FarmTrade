@@ -9,11 +9,12 @@ import {
     ScrollView,
     Modal,
     Alert,
-    Image, // Import Image for social icons
+    Image,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { register } from '@/lib/api';
 import { setStoredAuth } from '@/lib/auth';
+import { Eye, EyeOff } from 'lucide-react-native';
 
 export default function CreateAccountScreen() {
     const [formData, setFormData] = useState({
@@ -23,6 +24,8 @@ export default function CreateAccountScreen() {
         confirmPassword: '',
     });
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleRegister = async () => {
         // Validation
@@ -47,12 +50,10 @@ export default function CreateAccountScreen() {
             const response = await register(formData.name, formData.email, formData.password);
 
             if (response.success) {
-                // Store auth data but don't redirect yet since email needs verification
                 if (response.token && response.user) {
                     await setStoredAuth(response.token, response.user);
                 }
 
-                // Redirect to email sent screen
                 router.push({
                     pathname: '/auth/email-sent',
                     params: { email: formData.email }
@@ -73,7 +74,6 @@ export default function CreateAccountScreen() {
     };
 
     const handleSocialLogin = (provider: string) => {
-        // TODO: Implement social login
         Alert.alert('Coming Soon', `${provider} login will be available soon!`);
     };
 
@@ -123,28 +123,46 @@ export default function CreateAccountScreen() {
 
                         {/* Password */}
                         <View className="mb-6">
-                            <TextInput
-                                className="border-b border-gray-200 pb-3 text-base text-black font-light"
-                                placeholder="Password"
-                                placeholderTextColor="#9ca3af"
-                                value={formData.password}
-                                onChangeText={(value) => updateFormData('password', value)}
-                                secureTextEntry
-                                autoCapitalize="none"
-                            />
+                            <View className="flex-row items-center border-b border-gray-200">
+                                <TextInput
+                                    className="flex-1 text-base text-black font-light"
+                                    placeholder="Password"
+                                    placeholderTextColor="#9ca3af"
+                                    value={formData.password}
+                                    onChangeText={(value) => updateFormData('password', value)}
+                                    secureTextEntry={!showPassword}
+                                    autoCapitalize="none"
+                                />
+                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="pr-2 -mr-2">
+                                    {showPassword ? (
+                                        <Eye size={20} color="#9CA3AF" />
+                                    ) : (
+                                        <EyeOff size={20} color="#9CA3AF" />
+                                    )}
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         {/* Confirm Password */}
                         <View className="mb-6">
-                            <TextInput
-                                className="border-b border-gray-200 pb-3 text-base text-black font-light"
-                                placeholder="Confirm password"
-                                placeholderTextColor="#9ca3af"
-                                value={formData.confirmPassword}
-                                onChangeText={(value) => updateFormData('confirmPassword', value)}
-                                secureTextEntry
-                                autoCapitalize="none"
-                            />
+                            <View className="flex-row items-center border-b border-gray-200">
+                                <TextInput
+                                    className="flex-1 text-base text-black font-light"
+                                    placeholder="Confirm password"
+                                    placeholderTextColor="#9ca3af"
+                                    value={formData.confirmPassword}
+                                    onChangeText={(value) => updateFormData('confirmPassword', value)}
+                                    secureTextEntry={!showConfirmPassword}
+                                    autoCapitalize="none"
+                                />
+                                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} className="pr-2 -mr-2">
+                                    {showConfirmPassword ? (
+                                        <Eye size={20} color="#9CA3AF" />
+                                    ) : (
+                                        <EyeOff size={20} color="#9CA3AF" />
+                                    )}
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         {/* Register Button */}
@@ -184,7 +202,6 @@ export default function CreateAccountScreen() {
                                 <Image source={require('../../assets/images/facebook.png')} className="w-6 h-6" />
                             </TouchableOpacity>
                         </View>
-
 
                         {/* Footer */}
                         <View className="flex-row justify-center items-center mt-auto">

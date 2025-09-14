@@ -1,8 +1,8 @@
-import { Schema, model } from "mongoose";
-import pkg from "bcryptjs";
+import { Schema, model } from 'mongoose';
+import pkg from 'bcryptjs';
 const { hash, compare } = pkg;
-import jwt from "jsonwebtoken";
-import config from "../config/auth.config.js";
+import jwt from 'jsonwebtoken';
+import config from '../config/auth.config.js';
 
 const userSchema = new Schema(
   {
@@ -20,7 +20,7 @@ const userSchema = new Schema(
       trim: true,
       match: [
         /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-        "Please enter a valid email",
+        'Please enter a valid email',
       ],
     },
     password: {
@@ -34,7 +34,7 @@ const userSchema = new Schema(
     phone: {
       type: String,
       trim: true,
-      match: [/^\+?[\d\s\-\(\)]+$/, "Please enter a valid phone number"],
+      match: [/^\+?[\d\s\-\(\)]+$/, 'Please enter a valid phone number'],
     },
     location: {
       type: String,
@@ -66,8 +66,8 @@ const userSchema = new Schema(
     },
     authProvider: {
       type: String,
-      enum: ["local", "google", "facebook"],
-      default: "local",
+      enum: ['local', 'google', 'facebook'],
+      default: 'local',
     },
     googleId: {
       type: String,
@@ -95,17 +95,38 @@ const userSchema = new Schema(
       type: Date,
       default: null,
     },
+    // Legacy field - keeping for backward compatibility
     emailVerificationToken: {
       type: String,
       default: null,
+      select: false, // Hide from normal queries
     },
+    // New dual verification system fields
+    verificationToken: {
+      type: String,
+      sparse: true,
+      select: false, // Hide from normal queries for security
+    },
+    verificationCode: {
+      type: String,
+      sparse: true,
+      select: false, // Hide from normal queries for security
+    },
+    verificationCodeExpires: {
+      type: Date,
+      sparse: true,
+      select: false, // Hide from normal queries
+    },
+    // Password reset fields
     passwordResetToken: {
       type: String,
       default: null,
+      select: false, // Hide from normal queries for security
     },
     passwordResetExpires: {
       type: Date,
       default: null,
+      select: false, // Hide from normal queries
     },
     passwordChangedAt: {
       type: Date,
@@ -128,6 +149,9 @@ const userSchema = new Schema(
       transform: function (doc, ret) {
         delete ret.password;
         delete ret.emailVerificationToken;
+        delete ret.verificationToken;
+        delete ret.verificationCode;
+        delete ret.verificationCodeExpires;
         delete ret.passwordResetToken;
         delete ret.passwordResetExpires;
         delete ret.loginAttempts;
@@ -146,10 +170,14 @@ userSchema.index({ facebookId: 1 });
 userSchema.index({ lockUntil: 1 });
 userSchema.index({ verified: 1 });
 userSchema.index({ isActive: 1 });
+// New indexes for verification system
+userSchema.index({ verificationCode: 1 }, { sparse: true });
+userSchema.index({ verificationCodeExpires: 1 }, { sparse: true });
+userSchema.index({ verificationToken: 1 }, { sparse: true });
 
 // Pre-save middleware to hash password using config
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
 
   try {
     // Use salt rounds from config
@@ -185,4 +213,43 @@ userSchema.methods.generateAuthToken = function () {
   );
 };
 
-export default model("User", userSchema);
+// Method to check if verification code is valid and not expired
+userSchema.methods.isVerificationCodeValid = function (code) {
+  return (
+    this.verificationCode === code &&
+    this.verificationCodeExpires &&
+    this.verificationCodeExpires > new Date()
+  );
+};
+
+// Method to clear all verification data
+userSchema.methods.clearVerificationData = function () {
+  this.verificationCode = undefined;
+  this.verificationCodeExpires = undefined;
+  this.verificationToken = undefined;
+  this.emailVerificationToken = undefined; // Clear legacy field too
+};
+
+// Static method to find user by verification code
+userSchema.statics.findByVerificationCode = function (code) {
+  return this.findOne({
+    verificationCode: code,
+    verificationCodeExpires: { $gt: new Date() },
+  });
+};
+
+// Static method to cleanup expired verification codes (for maintenance)
+userSchema.statics.cleanupExpiredVerifications = function () {
+  return this.updateMany(
+    { verificationCodeExpires: { $lt: new Date() } },
+    {
+      $unset: {
+        verificationCode: 1,
+        verificationCodeExpires: 1,
+        verificationToken: 1,
+      },
+    }
+  );
+};
+
+export default model('User', userSchema);
