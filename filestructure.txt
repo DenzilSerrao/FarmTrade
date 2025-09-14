@@ -38,8 +38,24 @@
 |-- app.config.production.js
 |-- app.json
 |-- assets
+    |-- fonts
+        |-- ProductSans-Black.ttf
+        |-- ProductSans-BlackItalic.ttf
+        |-- ProductSans-Bold.ttf
+        |-- ProductSans-BoldItalic.ttf
+        |-- ProductSans-Italic.ttf
+        |-- ProductSans-Light.ttf
+        |-- ProductSans-LightItalic.ttf
+        |-- ProductSans-Medium.ttf
+        |-- ProductSans-MediumItalic.ttf
+        |-- ProductSans-Regular.ttf
+        |-- ProductSans-Thin.ttf
+        |-- ProductSans-ThinItalic.ttf
     |-- images
+        |-- apple.png
+        |-- facebook.png
         |-- favicon.png
+        |-- google.png
         |-- icon.png
 |-- babel.config.js
 |-- components

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   SafeAreaView,
   ActivityIndicator,
   Alert,
@@ -31,19 +30,21 @@ export default function VerifyEmailScreen() {
       const response = await verifyEmail(verificationToken);
 
       if (response.success) {
-        // If the response includes user data and token, store them
         if (response.user && response.token) {
           await setStoredAuth(response.token, response.user);
         }
         
-        // Redirect to success screen
         router.replace('/auth/verify-success');
       } else {
         setError(response.message || 'Verification failed');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Email verification error:', error);
-      setError(error.message || 'Verification failed');
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('An unknown error occurred.');
+      }
     } finally {
       setLoading(false);
     }
@@ -51,10 +52,12 @@ export default function VerifyEmailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 justify-center items-center px-8">
           <ActivityIndicator size="large" color="#22C55E" />
-          <Text style={styles.loadingText}>Verifying your email...</Text>
+          <Text className="text-base text-gray-500 mt-4 text-center font-light">
+            Verifying your email...
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -62,54 +65,21 @@ export default function VerifyEmailScreen() {
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.errorTitle}>Verification Failed</Text>
-          <Text style={styles.errorText}>{error}</Text>
-          <Text style={styles.helpText}>
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 justify-center items-center px-8">
+          <Text className="text-2xl font-medium text-red-500 mb-4 text-center">
+            Verification Failed
+          </Text>
+          <Text className="text-base text-gray-500 text-center font-light mb-4">
+            {error}
+          </Text>
+          <Text className="text-sm text-gray-400 text-center font-light">
             Please try registering again or contact support if the problem persists.
           </Text>
         </View>
       </SafeAreaView>
     );
   }
-
+  
   return null;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  errorTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#EF4444',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  helpText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-  },
-});

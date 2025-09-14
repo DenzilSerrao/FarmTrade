@@ -42,7 +42,7 @@ api.interceptors.response.use(
 // ==================== AUTH ENDPOINTS ====================
 export const login = async (email: string, password: string) => {
   const response = await api.post('/auth/login', { email, password });
-  console.log('LoginFB:', response.data);
+  console.log('Login:', response.data);
   return response.data;
 };
 

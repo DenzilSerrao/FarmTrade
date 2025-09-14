@@ -121,7 +121,7 @@ class AuthService {
         '+password +loginAttempts +lockUntil'
       );
       if (!user) {
-        throw new Error('Invalid credentials');
+        throw new Error('Missing credentials');
       }
 
       // Check if account is locked
@@ -216,8 +216,8 @@ class AuthService {
       }
 
       if (user.verified) {
-        return { 
-          success: true, 
+        return {
+          success: true,
           message: 'Email already verified',
           user: {
             id: user._id,
