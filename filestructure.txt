@@ -91,6 +91,7 @@
     |-- .env
     |-- .env.example
     |-- .gitignore
+    |-- Category.csv
     |-- CommodityAndCommodityHeads.csv
     |-- expo-env.d.ts
     |-- package-lock.json
