@@ -53,10 +53,21 @@
         |-- ProductSans-ThinItalic.ttf
     |-- images
         |-- apple.png
+        |-- berries.png
+        |-- cropkart-logo.png
         |-- facebook.png
+        |-- farmer.png
         |-- favicon.png
+        |-- fruits.png
         |-- google.png
+        |-- grains.png
+        |-- herbs.jpg
+        |-- hero-banner.png
         |-- icon.png
+        |-- milk.png
+        |-- tomatoes.png
+        |-- tulsi.png
+        |-- veggies.jpg
 |-- babel.config.js
 |-- components
     |-- StatusBadge.tsx
@@ -92,6 +103,7 @@
         |-- config
             |-- auth.config.js
             |-- db.js
+            |-- images.config.js
             |-- passport.js
         |-- controllers
             |-- authController.js
@@ -123,9 +135,17 @@
             |-- dashboardService.js
             |-- emailService.js
             |-- orderService.js
+            |-- productService.js
             |-- profileService.js
             |-- shelfService.js
             |-- supportService.js
+        |-- uploads
+            |-- categories
+            |-- products
+            |-- users
+                |-- avatars
+    |-- uploads
+        |-- products
 |-- tailwind.config.js
 |-- tsconfig.json
 |-- types
