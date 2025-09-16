@@ -12,6 +12,7 @@ import {
 import { router } from 'expo-router';
 import { Plus, TriangleAlert, Package, Calendar, CreditCard, Trash2, Eye } from 'lucide-react-native';
 import { getShelfItems, deleteShelfItem, getShelfAnalytics } from '@/lib/api';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface ShelfItemImage {
   filename: string;
@@ -82,8 +83,16 @@ export default function ShelfScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
+    // Refresh on initial render
     loadShelfData();
   }, []);
+  
+  // refresh when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadShelfData();
+    }, [])
+  );
 
   const loadShelfData = async () => {
     try {

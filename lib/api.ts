@@ -131,6 +131,35 @@ export const getDashboardSummary = async () => {
   return response.data;
 };
 
+// ==================== MARKETPLACE ENDPOINTS ====================
+export interface MarketplaceOptions {
+  category?: string;
+  location?: string;
+  priceRange?: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  minQuantity?: number;
+  harvestAfter?: string;
+  organic?: boolean;
+}
+
+export const getMarketplaceItems = async (options: MarketplaceOptions = {}) => {
+  const { category, location, priceRange, page = 1, limit = 20, search, sortBy = 'recent' } = options;
+  const response = await api.get('/shelf/marketplace', {
+    params: { category, location, priceRange, page, limit, search, sortBy }
+  });
+  return response.data;
+};
+
+export const searchMarketplace = async (query: string, filters: MarketplaceOptions = {}) => {
+  const response = await api.get('/shelf/marketplace', {
+    params: { search: query, ...filters }
+  });
+  return response.data;
+};
+
 // ==================== ORDER ENDPOINTS ====================
 export const getOrders = async () => {
   const response = await api.get('/orders');

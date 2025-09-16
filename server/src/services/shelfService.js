@@ -9,7 +9,14 @@ class ShelfService {
   // Get user's shelf items with filtering and pagination
   async getUserShelfItems(userId, options = {}) {
     try {
-      const { category, lowStock, page = 1, limit = 20, search, sortBy = 'createdAt' } = options;
+      const {
+        category,
+        lowStock,
+        page = 1,
+        limit = 20,
+        search,
+        sortBy = 'createdAt',
+      } = options;
       const skip = (page - 1) * limit;
 
       const query = {
@@ -399,6 +406,7 @@ class ShelfService {
   }
 
   // Get public marketplace items (for buyers to browse)
+  // Get public marketplace items (for buyers to browse)
   async getMarketplaceItems(options = {}) {
     try {
       const {
@@ -416,7 +424,7 @@ class ShelfService {
       } = options;
       const skip = (page - 1) * limit;
 
-      const query = { 
+      const query = {
         available: true,
         isActive: true,
         quantity: { $gt: 0 },
@@ -460,8 +468,8 @@ class ShelfService {
           const nearbyUsers = await User.find({
             location: { $regex: userState, $options: 'i' },
           }).select('_id');
-          
-          const nearbyUserIds = nearbyUsers.map(u => u._id);
+
+          const nearbyUserIds = nearbyUsers.map((u) => u._id);
           query.ownerId = { $in: nearbyUserIds };
         }
       }
@@ -511,6 +519,7 @@ class ShelfService {
       const total = await Item.countDocuments(query);
 
       return {
+        success: true,
         items: formattedItems,
         pagination: {
           page: parseInt(page),
@@ -521,7 +530,17 @@ class ShelfService {
       };
     } catch (error) {
       console.error('Error in getMarketplaceItems:', error);
-      throw error;
+      return {
+        success: false,
+        message: 'Failed to fetch marketplace items',
+        items: [],
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: 0,
+          pages: 0,
+        },
+      };
     }
   }
 }
