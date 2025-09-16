@@ -1,4 +1,4 @@
-// models/Item.js - Updated schema
+// models/Item.js - Enhanced Product Model
 import { Schema, model } from 'mongoose';
 
 const imageSchema = new Schema({
@@ -46,6 +46,19 @@ const itemSchema = new Schema(
     category: {
       type: String,
       required: true,
+      enum: [
+        'vegetables',
+        'fruits',
+        'grains',
+        'pulses',
+        'spices',
+        'herbs',
+        'dairy',
+        'meat',
+        'poultry',
+        'fish',
+        'other',
+      ],
     },
     price: {
       type: Number,
@@ -60,6 +73,7 @@ const itemSchema = new Schema(
     unit: {
       type: String,
       required: true,
+      enum: ['kg', 'gram', 'liter', 'piece', 'dozen', 'quintal', 'ton'],
     },
     minOrderQuantity: {
       type: Number,
