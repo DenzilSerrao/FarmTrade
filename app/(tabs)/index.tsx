@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,23 +19,98 @@ import {
   ShoppingCart,
   User,
 } from 'lucide-react-native';
-
-const productCategories = [
-  { name: 'Veggies', image: require('../../assets/images/veggies.jpg') },
-  { name: 'Herbs', image: require('../../assets/images/herbs.jpg') },
-  { name: 'Fruits', image: require('../../assets/images/fruits.png') },
-  { name: 'Grains', image: require('../../assets/images/grains.png') },
-];
-
-const featuredProducts = [
-  { id: 1, name: 'Berries', price: '₹500', rating: '4.5', reviews: '672', image: require('../../assets/images/berries.png') },
-  { id: 2, name: 'Tomatoes', price: '₹500', rating: '4.5', reviews: '672', image: require('../../assets/images/tomatoes.png') },
-  { id: 3, name: 'Tulsi', price: '₹500', rating: '4.5', reviews: '672', image: require('../../assets/images/tulsi.png') },
-  { id: 4, name: 'Milk', price: '₹70', rating: '4.5', reviews: '672', image: require('../../assets/images/milk.png') },
-];
+import { getShelfItems } from '@/lib/api';
+import { router } from 'expo-router';
 
 export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchFilters, setSearchFilters] = useState({
+    closestToMe: false,
+    cheapest: true,
+    highStock: false,
+    fresh: false,
+  });
+
+  const productCategories = [
+    { name: 'Veggies', image: require('../../assets/images/veggies.jpg') },
+    { name: 'Herbs', image: require('../../assets/images/herbs.jpg') },
+    { name: 'Fruits', image: require('../../assets/images/fruits.png') },
+    { name: 'Grains', image: require('../../assets/images/grains.png') },
+  ];
+
+  useEffect(() => {
+    loadFeaturedProducts();
+  }, [searchFilters]);
+
+  const loadFeaturedProducts = async () => {
+    try {
+      const response = await getShelfItems();
+      if (response.success) {
+        let products = response.data.items || [];
+        
+        // Apply filters
+        if (searchFilters.cheapest) {
+          products = products.sort((a, b) => a.price - b.price);
+        }
+        
+        if (searchFilters.highStock) {
+          products = products.filter(item => item.quantity > 50);
+        }
+        
+        if (searchFilters.fresh) {
+          const threeDaysAgo = new Date();
+          threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+          products = products.filter(item => new Date(item.harvestDate) >= threeDaysAgo);
+        }
+        
+        // Take first 8 items for featured section
+        setFeaturedProducts(products.slice(0, 8));
+      }
+    } catch (error) {
+      console.error('Error loading products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      await loadFeaturedProducts();
+      return;
+    }
+
+    try {
+      // Implement search with filters
+      const response = await getShelfItems();
+      if (response.success) {
+        let products = response.data.items || [];
+        
+        // Filter by search query
+        products = products.filter(item =>
+          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.description.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        
+        // Apply other filters
+        if (searchFilters.cheapest) {
+          products = products.sort((a, b) => a.price - b.price);
+        }
+        
+        setFeaturedProducts(products.slice(0, 8));
+      }
+    } catch (error) {
+      console.error('Error searching products:', error);
+    }
+  };
+
+  const toggleFilter = (filterKey: string) => {
+    setSearchFilters(prev => ({
+      ...prev,
+      [filterKey]: !prev[filterKey],
+    }));
+  };
 
   return (
     <View className="flex-1 bg-white">
@@ -66,7 +142,8 @@ export default function HomeScreen() {
         </View>
 
         {/* Search Bar */}
-        <View className="flex-row items-center justify-between px-4 py-2 mx-6 my-4 border border-gray-300 rounded-full">
+        <View className="mx-6 my-4">
+          <View className="flex-row items-center justify-between px-4 py-2 border border-gray-300 rounded-full">
           <Search size={20} color="#9CA3AF" />
           <TextInput
             className="flex-1 ml-2 text-base text-gray-800"
@@ -74,10 +151,45 @@ export default function HomeScreen() {
             placeholderTextColor="#9ca3af"
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearch}
           />
-          <TouchableOpacity className="bg-green-500 w-10 h-10 rounded-full items-center justify-center ml-2">
+          <TouchableOpacity 
+            className="bg-green-500 w-10 h-10 rounded-full items-center justify-center ml-2"
+            onPress={handleSearch}
+          >
             <Filter size={20} color="white" />
           </TouchableOpacity>
+        </View>
+          
+          {/* Search Filters */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-6">
+            <TouchableOpacity
+              className={`mr-3 px-4 py-2 rounded-full border ${searchFilters.closestToMe ? 'bg-green-100 border-green-500' : 'bg-white border-gray-300'}`}
+              onPress={() => toggleFilter('closestToMe')}
+            >
+              <Text className={`text-sm ${searchFilters.closestToMe ? 'text-green-700' : 'text-gray-600'}`}>
+                Closest to me
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              className={`mr-3 px-4 py-2 rounded-full border ${searchFilters.cheapest ? 'bg-green-100 border-green-500' : 'bg-white border-gray-300'}`}
+              onPress={() => toggleFilter('cheapest')}
+            >
+              <Text className={`text-sm ${searchFilters.cheapest ? 'text-green-700' : 'text-gray-600'}`}>
+                Cheapest first
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              className={`mr-3 px-4 py-2 rounded-full border ${searchFilters.highStock ? 'bg-green-100 border-green-500' : 'bg-white border-gray-300'}`}
+              onPress={() => toggleFilter('highStock')}
+            >
+              <Text className={`text-sm ${searchFilters.highStock ? 'text-green-700' : 'text-gray-600'}`}>
+                High stock
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
 
         {/* Hero Banner */}
@@ -95,23 +207,43 @@ export default function HomeScreen() {
           </View>
           <View className="flex-row flex-wrap justify-between">
             {featuredProducts.map((product) => (
-              <View key={product.id} className="w-[48%] mb-6 bg-white rounded-lg border border-gray-200 shadow-sm">
-                <Image source={product.image} className="w-full h-32 rounded-t-lg" />
+              <TouchableOpacity 
+                key={product._id || product.id} 
+                className="w-[48%] mb-6 bg-white rounded-lg border border-gray-200 shadow-sm"
+                onPress={() => router.push({
+                  pathname: '/product/[id]',
+                  params: { id: product._id || product.id }
+                })}
+              >
+                <Image 
+                  source={{ 
+                    uri: product.primaryImage?.urls?.medium || 
+                         'https://images.pexels.com/photos/1300972/pexels-photo-1300972.jpeg?auto=compress&cs=tinysrgb&w=200' 
+                  }} 
+                  className="w-full h-32 rounded-t-lg" 
+                />
                 <TouchableOpacity className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md">
                   <Heart size={20} color="#EF4444" fill="#EF4444" />
                 </TouchableOpacity>
                 <View className="p-3">
                   <Text className="text-base font-medium text-gray-900">{product.name}</Text>
-                  <Text className="text-lg font-bold text-gray-900 mt-1">{product.price}</Text>
+                  <Text className="text-lg font-bold text-gray-900 mt-1">₹{product.price}/{product.unit}</Text>
+                  <Text className="text-sm text-gray-500">by {product.ownerId?.name || 'Unknown'}</Text>
                   <View className="flex-row items-center mt-1">
                     <Star size={14} color="#F59E0B" fill="#F59E0B" />
-                    <Text className="ml-1 text-sm text-gray-500">{product.rating}</Text>
-                    <Text className="text-sm text-gray-400"> ({product.reviews})</Text>
+                    <Text className="ml-1 text-sm text-gray-500">{product.ownerId?.rating || '4.5'}</Text>
+                    <Text className="text-sm text-gray-400"> ({product.ownerId?.totalTrades || 0})</Text>
+                    {product.organic && (
+                      <View className="ml-2 bg-green-100 px-2 py-1 rounded">
+                        <Text className="text-xs text-green-700 font-medium">Organic</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
+        )}
         </View>
       </ScrollView>
     </View>

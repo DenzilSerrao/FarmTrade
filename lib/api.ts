@@ -177,41 +177,32 @@ export const getUserStats = async () => {
 
 // ==================== SHELF ENDPOINTS ====================
 export const getShelfItems = async (): Promise<ShelfItem[]> => {
-  const response = await api.get('/shelf/items');
-  return response.data.data || response.data;
+  const response = await api.get('/shelf');
+  return response.data;
 };
 
 export const getShelfItem = async (itemId: string) => {
-  const response = await api.get(`/shelf/items/${itemId}`);
+  const response = await api.get(`/shelf/${itemId}`);
   return response.data;
 };
 
 export const addShelfItem = async (itemData: any) => {
-  const response = await api.post('/shelf/items', itemData);
+  const response = await api.post('/shelf', itemData);
   return response.data;
 };
 
 export const updateShelfItem = async (itemId: string, itemData: any) => {
-  const response = await api.put(`/shelf/items/${itemId}`, itemData);
-  return response.data;
-};
-
-export const uploadShelfItem = async (formData: FormData) => {
-  const response = await api.post('/profile/avatar', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const response = await api.put(`/shelf/${itemId}`, itemData);
   return response.data;
 };
 
 export const deleteShelfItem = async (itemId: string) => {
-  const response = await api.delete(`/shelf/items/${itemId}`);
+  const response = await api.delete(`/shelf/${itemId}`);
   return response.data;
 };
 
 export const getShelfAnalytics = async () => {
-  const response = await api.get('/shelf/analytics');
+  const response = await api.get('/shelf/analytics/dashboard');
   return response.data;
 };
 

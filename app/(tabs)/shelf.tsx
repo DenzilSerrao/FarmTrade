@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { Plus, TriangleAlert as AlertTriangle, Package, Calendar, CreditCard as Edit3, Trash2 } from 'lucide-react-native';
+import { getShelfItems, deleteShelfItem } from '@/lib/api';
 
 interface ShelfItem {
   id: number;
@@ -22,50 +23,30 @@ interface ShelfItem {
 }
 
 export default function ShelfScreen() {
-  const [shelfItems, setShelfItems] = useState<ShelfItem[]>([
-    {
-      id: 1,
-      name: 'Organic Tomatoes',
-      quantity: 45,
-      unit: 'crates',
-      price: 45,
-      expiryDate: '2025-01-15',
-      lowStock: false,
-      image: 'https://images.pexels.com/photos/568383/pexels-photo-568383.jpeg?auto=compress&cs=tinysrgb&w=200'
-    },
-    {
-      id: 2,
-      name: 'Fresh Lettuce',
-      quantity: 8,
-      unit: 'boxes',
-      price: 28,
-      expiryDate: '2025-01-12',
-      lowStock: true,
-      image: 'https://images.pexels.com/photos/1300972/pexels-photo-1300972.jpeg?auto=compress&cs=tinysrgb&w=200'
-    },
-    {
-      id: 3,
-      name: 'Sweet Corn',
-      quantity: 120,
-      unit: 'bags',
-      price: 35,
-      expiryDate: '2025-01-20',
-      lowStock: false,
-      image: 'https://images.pexels.com/photos/547263/pexels-photo-547263.jpeg?auto=compress&cs=tinysrgb&w=200'
-    },
-    {
-      id: 4,
-      name: 'Bell Peppers',
-      quantity: 3,
-      unit: 'crates',
-      price: 55,
-      expiryDate: '2025-01-14',
-      lowStock: true,
-      image: 'https://images.pexels.com/photos/1292556/pexels-photo-1292556.jpeg?auto=compress&cs=tinysrgb&w=200'
-    },
-  ]);
+  const [shelfItems, setShelfItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const handleDeleteItem = (id: number) => {
+  useEffect(() => {
+    loadShelfItems();
+  }, []);
+
+  const loadShelfItems = async () => {
+    try {
+      const response = await getShelfItems();
+      if (response.success) {
+        setShelfItems(response.data.items || []);
+      }
+    } catch (error) {
+      console.error('Error loading shelf items:', error);
+      Alert.alert('Error', 'Failed to load shelf items');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleDeleteItem = (id: string) => {
     Alert.alert(
       'Delete Item',
       'Are you sure you want to remove this item from your shelf?',
@@ -74,8 +55,17 @@ export default function ShelfScreen() {
         { 
           text: 'Delete', 
           style: 'destructive',
-          onPress: () => {
-            setShelfItems(prev => prev.filter(item => item.id !== id));
+          onPress: async () => {
+            try {
+              const response = await deleteShelfItem(id);
+              if (response.success) {
+                await loadShelfItems();
+              } else {
+                Alert.alert('Error', 'Failed to delete item');
+              }
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete item');
+            }
           }
         }
       ]
@@ -93,6 +83,10 @@ export default function ShelfScreen() {
           <Text style={styles.subtitle}>Manage your inventory</Text>
         </View>
         <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={() => router.push('/add-item')}
+        >
           <Plus size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
@@ -128,15 +122,26 @@ export default function ShelfScreen() {
 
       {/* Shelf Items */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <Text>Loading shelf items...</Text>
+          </View>
+        ) : (
         <View style={styles.itemsGrid}>
           {shelfItems.map((item) => (
-            <View key={item.id} style={[
+            <View key={item._id || item.id} style={[
               styles.itemCard,
-              item.lowStock && styles.lowStockCard
+              (item.lowStock || item.quantity <= item.lowStockThreshold) && styles.lowStockCard
             ]}>
-              <Image source={{ uri: item.image }} style={styles.itemImage} />
+              <Image 
+                source={{ 
+                  uri: item.primaryImage?.urls?.medium || 
+                       'https://images.pexels.com/photos/1300972/pexels-photo-1300972.jpeg?auto=compress&cs=tinysrgb&w=200' 
+                }} 
+                style={styles.itemImage} 
+              />
               
-              {item.lowStock && (
+              {(item.lowStock || item.quantity <= item.lowStockThreshold) && (
                 <View style={styles.lowStockBadge}>
                   <AlertTriangle size={14} color="#F59E0B" />
                   <Text style={styles.lowStockText}>Low Stock</Text>
@@ -148,7 +153,7 @@ export default function ShelfScreen() {
                 <Text style={styles.itemQuantity}>
                   {item.quantity} {item.unit}
                 </Text>
-                <Text style={styles.itemPrice}>${item.price}/{item.unit.slice(0, -1)}</Text>
+                <Text style={styles.itemPrice}>₹{item.price}/{item.unit}</Text>
                 <Text style={styles.expiryDate}>Expires: {item.expiryDate}</Text>
               </View>
 
@@ -158,7 +163,7 @@ export default function ShelfScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={styles.deleteButton}
-                  onPress={() => handleDeleteItem(item.id)}
+                  onPress={() => handleDeleteItem(item._id || item.id)}
                 >
                   <Trash2 size={16} color="#EF4444" />
                 </TouchableOpacity>
@@ -166,6 +171,7 @@ export default function ShelfScreen() {
             </View>
           ))}
         </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -320,5 +326,11 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
   },
 });

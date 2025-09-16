@@ -9,12 +9,12 @@ class ShelfService {
   // Get user's shelf items with filtering and pagination
   async getUserShelfItems(userId, options = {}) {
     try {
-      const { category, lowStock, page = 1, limit = 20, search } = options;
+      const { category, lowStock, page = 1, limit = 20, search, sortBy = 'createdAt' } = options;
       const skip = (page - 1) * limit;
 
       const query = {
         ownerId: userId,
-        available: true,
+        isActive: true,
       };
 
       if (category) {
@@ -28,8 +28,30 @@ class ShelfService {
         ];
       }
 
+      // Sorting options
+      const sortOptions = {};
+      switch (sortBy) {
+        case 'price_low':
+          sortOptions.price = 1;
+          break;
+        case 'price_high':
+          sortOptions.price = -1;
+          break;
+        case 'quantity_low':
+          sortOptions.quantity = 1;
+          break;
+        case 'quantity_high':
+          sortOptions.quantity = -1;
+          break;
+        case 'name':
+          sortOptions.name = 1;
+          break;
+        default:
+          sortOptions.createdAt = -1;
+      }
+
       let items = await Item.find(query)
-        .sort({ createdAt: -1 })
+        .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit))
         .populate('ownerId', 'name location rating totalTrades');
@@ -382,18 +404,26 @@ class ShelfService {
       const {
         category,
         location,
+        userLocation,
         priceRange,
         page = 1,
         limit = 20,
         search,
         sortBy = 'createdAt',
+        closestToMe = false,
+        highStock = false,
+        fresh = false,
       } = options;
       const skip = (page - 1) * limit;
 
-      const query = { available: true };
+      const query = { 
+        available: true,
+        isActive: true,
+        quantity: { $gt: 0 },
+      };
 
       if (category) {
-        query.category = category;
+        query.category = category.toLowerCase().replace(/\s+/g, '_');
       }
 
       if (search) {
@@ -409,6 +439,33 @@ class ShelfService {
         if (priceRange.max) query.price.$lte = priceRange.max;
       }
 
+      // Filter by high stock
+      if (highStock) {
+        query.quantity = { ...query.quantity, $gte: 50 };
+      }
+
+      // Filter by fresh items (harvested within last 7 days)
+      if (fresh) {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        query.harvestDate = { $gte: sevenDaysAgo };
+      }
+
+      // Location-based filtering
+      if (closestToMe && userLocation) {
+        // Extract state from user location
+        const userState = userLocation.split(',')[1]?.trim();
+        if (userState) {
+          // Find users in the same state
+          const nearbyUsers = await User.find({
+            location: { $regex: userState, $options: 'i' },
+          }).select('_id');
+          
+          const nearbyUserIds = nearbyUsers.map(u => u._id);
+          query.ownerId = { $in: nearbyUserIds };
+        }
+      }
+
       const sortOptions = {};
       switch (sortBy) {
         case 'price_low':
@@ -420,18 +477,32 @@ class ShelfService {
         case 'newest':
           sortOptions.createdAt = -1;
           break;
+        case 'quantity_high':
+          sortOptions.quantity = -1;
+          break;
+        case 'freshest':
+          sortOptions.harvestDate = -1;
+          break;
         case 'rating':
-          sortOptions['ownerId.rating'] = -1;
+          // This requires a lookup, handle separately
           break;
         default:
           sortOptions.createdAt = -1;
       }
 
-      const items = await Item.find(query)
+      let itemsQuery = Item.find(query)
         .populate('ownerId', 'name location rating totalTrades')
-        .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit));
+
+      // Handle rating sort with lookup
+      if (sortBy === 'rating') {
+        itemsQuery = itemsQuery.sort({ 'ownerId.rating': -1 });
+      } else {
+        itemsQuery = itemsQuery.sort(sortOptions);
+      }
+
+      const items = await itemsQuery;
 
       const formattedItems = items.map((item) =>
         this.formatItemWithImages(item)
