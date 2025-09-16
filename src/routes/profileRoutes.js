@@ -8,6 +8,7 @@ import {
   deleteAccount,
   getUserStats,
 } from '../controllers/profileController.js';
+import addressController from '../controllers/addressController.js';
 
 // All profile routes require authentication (handled by app.js middleware)
 
@@ -28,5 +29,12 @@ router.delete('/', deleteAccount);
 
 // GET user's trading statistics
 router.get('/stats', getUserStats);
+
+// Address management routes
+router.get('/addresses', addressController.getUserAddresses);
+router.post('/addresses', addressController.createAddress);
+router.get('/addresses/:addressId', addressController.getAddress);
+router.put('/addresses/:addressId', addressController.updateAddress);
+router.delete('/addresses/:addressId', addressController.deleteAddress);
 
 export default router;

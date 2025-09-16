@@ -99,6 +99,46 @@ class EmailService {
     }
   }
 
+  // Send order confirmation email
+  async sendOrderConfirmation(email, userName, orderId, productName, totalPrice, deliveryAddress) {
+    const mailOptions = {
+      from: this.fromAddress,
+      to: email,
+      subject: 'Order Confirmation - Your order has been placed!',
+      html: this.getOrderConfirmationTemplate(userName, orderId, productName, totalPrice, deliveryAddress),
+      text: this.getOrderConfirmationText(userName, orderId, productName, totalPrice, deliveryAddress),
+    };
+
+    try {
+      const result = await this.transporter.sendMail(mailOptions);
+      console.log('Order confirmation email sent:', result.messageId);
+      return { success: true, messageId: result.messageId };
+    } catch (error) {
+      console.error('Failed to send order confirmation email:', error);
+      throw new Error('Failed to send order confirmation email');
+    }
+  }
+
+  // Send new order notification to seller
+  async sendNewOrderNotification(email, sellerName, orderId, productName, buyerName, deliveryAddress) {
+    const mailOptions = {
+      from: this.fromAddress,
+      to: email,
+      subject: 'New Order Received!',
+      html: this.getNewOrderNotificationTemplate(sellerName, orderId, productName, buyerName, deliveryAddress),
+      text: this.getNewOrderNotificationText(sellerName, orderId, productName, buyerName, deliveryAddress),
+    };
+
+    try {
+      const result = await this.transporter.sendMail(mailOptions);
+      console.log('New order notification sent:', result.messageId);
+      return { success: true, messageId: result.messageId };
+    } catch (error) {
+      console.error('Failed to send new order notification:', error);
+      throw new Error('Failed to send new order notification');
+    }
+  }
+
   // Email Templates
   getPasswordResetTemplate(resetUrl, userName) {
     return `
@@ -320,6 +360,154 @@ Your password has been successfully changed.
 
 Best regards,
 ${process.env.APP_NAME || 'Your App'} Team
+    `.trim();
+  }
+
+  getOrderConfirmationTemplate(userName, orderId, productName, totalPrice, deliveryAddress) {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Order Confirmation</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #22C55E; color: white; padding: 20px; text-align: center; border-radius: 8px; }
+          .order-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .footer { font-size: 12px; color: #666; margin-top: 30px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Order Confirmed! 🎉</h1>
+          </div>
+          
+          <p>Hi ${userName},</p>
+          <p>Thank you for your order! We're excited to get your fresh produce to you.</p>
+          
+          <div class="order-details">
+            <h3>Order Details</h3>
+            <p><strong>Order ID:</strong> #${orderId}</p>
+            <p><strong>Product:</strong> ${productName}</p>
+            <p><strong>Total Amount:</strong> ₹${totalPrice}</p>
+            
+            <h4>Delivery Address:</h4>
+            <p>${deliveryAddress.name}<br>
+            ${deliveryAddress.addressLine1}<br>
+            ${deliveryAddress.city}, ${deliveryAddress.state} - ${deliveryAddress.pincode}<br>
+            Phone: ${deliveryAddress.phone}</p>
+          </div>
+          
+          <p>You'll receive updates about your order status via email and in the app.</p>
+          
+          <div class="footer">
+            <p>Best regards,<br>${process.env.APP_NAME || 'FarmTrade'} Team</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  getOrderConfirmationText(userName, orderId, productName, totalPrice, deliveryAddress) {
+    return `
+Order Confirmed!
+
+Hi ${userName},
+
+Thank you for your order! We're excited to get your fresh produce to you.
+
+Order Details:
+Order ID: #${orderId}
+Product: ${productName}
+Total Amount: ₹${totalPrice}
+
+Delivery Address:
+${deliveryAddress.name}
+${deliveryAddress.addressLine1}
+${deliveryAddress.city}, ${deliveryAddress.state} - ${deliveryAddress.pincode}
+Phone: ${deliveryAddress.phone}
+
+You'll receive updates about your order status via email and in the app.
+
+Best regards,
+${process.env.APP_NAME || 'FarmTrade'} Team
+    `.trim();
+  }
+
+  getNewOrderNotificationTemplate(sellerName, orderId, productName, buyerName, deliveryAddress) {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>New Order Received</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #3B82F6; color: white; padding: 20px; text-align: center; border-radius: 8px; }
+          .order-details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }
+          .footer { font-size: 12px; color: #666; margin-top: 30px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>New Order Received! 📦</h1>
+          </div>
+          
+          <p>Hi ${sellerName},</p>
+          <p>Great news! You have received a new order.</p>
+          
+          <div class="order-details">
+            <h3>Order Details</h3>
+            <p><strong>Order ID:</strong> #${orderId}</p>
+            <p><strong>Product:</strong> ${productName}</p>
+            <p><strong>Buyer:</strong> ${buyerName}</p>
+            
+            <h4>Delivery Address:</h4>
+            <p>${deliveryAddress.name}<br>
+            ${deliveryAddress.addressLine1}<br>
+            ${deliveryAddress.city}, ${deliveryAddress.state} - ${deliveryAddress.pincode}<br>
+            Phone: ${deliveryAddress.phone}</p>
+          </div>
+          
+          <p>Please log in to your account to accept the order and coordinate delivery.</p>
+          
+          <div class="footer">
+            <p>Best regards,<br>${process.env.APP_NAME || 'FarmTrade'} Team</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  getNewOrderNotificationText(sellerName, orderId, productName, buyerName, deliveryAddress) {
+    return `
+New Order Received!
+
+Hi ${sellerName},
+
+Great news! You have received a new order.
+
+Order Details:
+Order ID: #${orderId}
+Product: ${productName}
+Buyer: ${buyerName}
+
+Delivery Address:
+${deliveryAddress.name}
+${deliveryAddress.addressLine1}
+${deliveryAddress.city}, ${deliveryAddress.state} - ${deliveryAddress.pincode}
+Phone: ${deliveryAddress.phone}
+
+Please log in to your account to accept the order and coordinate delivery.
+
+Best regards,
+${process.env.APP_NAME || 'FarmTrade'} Team
     `.trim();
   }
 }

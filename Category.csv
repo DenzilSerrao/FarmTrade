@@ -1,0 +1,472 @@
+Commodity,Category
+Wheat,Cereals & Grains
+Paddy(Dhan)(Common),Cereals & Grains
+Rice,Cereals & Grains
+Maize,Cereals & Grains
+Jowar(Sorghum),Cereals & Grains
+Bengal+Gram(Gram)(Whole),Pulses & Legumes
+Red+Gram,Pulses & Legumes
+Black+Gram+(Urd+Beans)(Whole),Pulses & Legumes
+Green+Gram+(Moong)(Whole),Pulses & Legumes
+Groundnut,Nuts & Oilseeds
+Sesamum(Sesame%2cGingelly%2cTil),Nuts & Oilseeds
+Mustard,Nuts & Oilseeds
+Soyabean,Nuts & Oilseeds
+Sunflower,Nuts & Oilseeds
+Cotton,Commercial & Plantation Crops
+Jute,Commercial & Plantation Crops
+Apple,Fruits
+Orange,Fruits
+Banana,Fruits
+Mango,Fruits
+Pineapple,Fruits
+Grapes,Fruits
+Onion,Vegetables
+Potato,Vegetables
+Garlic,Vegetables
+Chili+Red,Vegetables
+Ginger(Dry),Spices & Condiments
+Bajra(Pearl+Millet%2fCumbu),Cereals & Grains
+Barley+(Jau),Cereals & Grains
+Ragi+(Finger+Millet),Cereals & Grains
+Cauliflower,Vegetables
+Brinjal,Vegetables
+Cashewnuts,Nuts & Oilseeds
+Coconut,Nuts & Oilseeds
+Black+pepper,Spices & Condiments
+Turmeric,Spices & Condiments
+Cardamoms,Spices & Condiments
+Betelnuts,Nuts & Oilseeds
+Cummin+Seed(Jeera),Spices & Condiments
+Coriander(Leaves),Vegetables
+Tea,Commercial & Plantation Crops
+Coffee,Commercial & Plantation Crops
+Methi(Leaves),Vegetables
+Methi+Seeds,Spices & Condiments
+Sugar,Others & Processed Goods
+Arhar+(Tur%2fRed+Gram)(Whole),Pulses & Legumes
+Green+Peas,Pulses & Legumes
+Binoula,Commercial & Plantation Crops
+Safflower,Nuts & Oilseeds
+Mash,Pulses & Legumes
+Kharif+Mash,Pulses & Legumes
+Riccbcan,Commercial & Plantation Crops
+Lentil+(Masur)(Whole),Pulses & Legumes
+Field+Pea,Pulses & Legumes
+Raya,Nuts & Oilseeds
+Toria,Nuts & Oilseeds
+Linseed,Nuts & Oilseeds
+Dhaincha,Others & Processed Goods
+Chikoos(Sapota),Fruits
+Papaya,Fruits
+Water+Melon,Fruits
+Gur(Jaggery),Others & Processed Goods
+Guar,Others & Processed Goods
+Taramira,Nuts & Oilseeds
+Mousambi(Sweet+Lime),Fruits
+Tomato,Vegetables
+Cluster+beans,Vegetables
+Bitter+gourd,Vegetables
+Bottle+gourd,Vegetables
+Ashgourd,Vegetables
+Pumpkin,Vegetables
+Bhindi(Ladies+Finger),Vegetables
+Amaranthus,Vegetables
+Green+Chilli,Vegetables
+Chilly+Capsicum,Vegetables
+Cowpea(Veg),Vegetables
+Banana+-+Green,Fruits
+Dal+(Avare),Pulses & Legumes
+Cowpea+(Lobia%2fKaramani),Pulses & Legumes
+Mataki,Pulses & Legumes
+Beans,Vegetables
+Moath+Dal,Pulses & Legumes
+Lak(Teora),Pulses & Legumes
+Other+Pulses,Pulses & Legumes
+Niger+Seed+(Ramtil),Nuts & Oilseeds
+Cotton+Seed,Nuts & Oilseeds
+Tapioca,Vegetables
+Amphophalus,Vegetables
+Ginger(Green),Vegetables
+Cocoa,Commercial & Plantation Crops
+Cloves,Spices & Condiments
+Nutmeg,Spices & Condiments
+Mace,Spices & Condiments
+Corriander+seed,Spices & Condiments
+Pepper+garbled,Spices & Condiments
+Pepper+ungarbled,Spices & Condiments
+Rubber,Commercial & Plantation Crops
+Coconut+Seed,Nuts & Oilseeds
+Big+Gram,Pulses & Legumes
+Kulthi(Horse+Gram),Pulses & Legumes
+Karamani,Pulses & Legumes
+Thinai+(Italian+Millet),Cereals & Grains
+Kodo+Millet(Varagu),Cereals & Grains
+Hybrid+Cumbu,Cereals & Grains
+T.V.+Cumbu,Cereals & Grains
+Foxtail+Millet(Navane),Cereals & Grains
+Same%2fSavi,Cereals & Grains
+Castor+Seed,Nuts & Oilseeds
+Honge+seed,Nuts & Oilseeds
+Hippe+Seed,Nuts & Oilseeds
+Neem+Seed,Nuts & Oilseeds
+Pundi+Seed,Nuts & Oilseeds
+Copra,Nuts & Oilseeds
+Ambada+Seed,Nuts & Oilseeds
+Dry+Chillies,Vegetables
+Cashewnuts,Nuts & Oilseeds
+Soanf,Spices & Condiments
+Ajwan,Spices & Condiments
+Coconut,Nuts & Oilseeds
+Sunhemp,Others & Processed Goods
+Arecanut(Betelnut%2fSupari),Nuts & Oilseeds
+Tobacco,Commercial & Plantation Crops
+Myrobolan(Harad),Others & Processed Goods
+Betal+Leaves,Others & Processed Goods
+Sugarcane,Commercial & Plantation Crops
+Jaggery,Others & Processed Goods
+Sweet+Potato,Vegetables
+Carrot,Vegetables
+Cabbage,Vegetables
+Ladies+Finger,Vegetables
+Snake+gourd,Vegetables
+Beetroot,Vegetables
+White+Pumpkin,Vegetables
+Cucumbar(Kheera),Vegetables
+Ridge+gourd(Tori),Vegetables
+Raddish,Vegetables
+Thondekai,Vegetables
+Duster+Beans,Vegetables
+Capsicum,Vegetables
+Green+Avare+(W),Vegetables
+Alsandikai,Vegetables
+Chow+Chow,Vegetables
+Drumstick,Vegetables
+Chapparad+Avare,Vegetables
+Thogrikai,Vegetables
+Leafy+Vegetable,Vegetables
+Mango+(Raw-Ripe),Fruits
+Sweet+Pumpkin,Vegetables
+Peas+Wet,Vegetables
+Jamamkhan,Fruits
+Seemebadnekai,Vegetables
+Knool+Khol,Vegetables
+Suvarna+Gadde,Vegetables
+Lime,Fruits
+Marasebu,Fruits
+Jack+Fruit,Fruits
+Siddota,Fruits
+Jamun(Narale+Hannu),Fruits
+Guava,Fruits
+Karbuja(Musk+Melon),Fruits
+Chakotha,Fruits
+Borehannu,Fruits
+Pomegranate,Fruits
+Tender+Coconut,Fruits
+Seetafal,Fruits
+Wood,Others & Processed Goods
+Bamboo,Others & Processed Goods
+Cane,Others & Processed Goods
+Firewood,Others & Processed Goods
+Soapnut(Antawala%2fRetha),Others & Processed Goods
+Tamarind+Seed,Others & Processed Goods
+Antawala,Others & Processed Goods
+Jute+Seed,Nuts & Oilseeds
+Cow,Animal Husbandry & Products
+Ox,Animal Husbandry & Products
+Bull,Animal Husbandry & Products
+Calf,Animal Husbandry & Products
+He+Buffalo,Animal Husbandry & Products
+She+Buffalo,Animal Husbandry & Products
+Sheep,Animal Husbandry & Products
+Goat,Animal Husbandry & Products
+Pigs,Animal Husbandry & Products
+Fig(Anjura%2fAnjeer),Fruits
+Nearle+Hannu,Fruits
+Nelli+Kai,Fruits
+Bunch+Beans,Vegetables
+Maragensu,Vegetables
+Skin+And+Hide,Animal Husbandry & Products
+Rose(Loose),Flowers & Ornamentals
+Jasmine,Flowers & Ornamentals
+Kakada,Flowers & Ornamentals
+Chrysanthemum(Loose),Flowers & Ornamentals
+Astera,Flowers & Ornamentals
+Kankambra,Flowers & Ornamentals
+Tube+Flower,Flowers & Ornamentals
+Marigold(Calcutta),Flowers & Ornamentals
+Honey,Animal Husbandry & Products
+Millets,Cereals & Grains
+Cashew+Kernnel,Nuts & Oilseeds
+Polherb,Spices & Condiments
+Chennangi+(Whole),Pulses & Legumes
+Suram,Vegetables
+Kuchur,Vegetables
+Yam,Vegetables
+Nargasi,Vegetables
+Sompu,Vegetables
+Sarasum,Vegetables
+Rajgir,Vegetables
+Ghee,Animal Husbandry & Products
+Javi,Vegetables
+Haralekai,Vegetables
+Seegu,Vegetables
+Pundi,Vegetables
+Suva+(Dill+Seed),Spices & Condiments
+Isabgul+(Psyllium),Others & Processed Goods
+Moath+Dal,Pulses & Legumes
+Masur+Dal,Pulses & Legumes
+Arhar+Dal(Tur+Dal),Pulses & Legumes
+Tamarind+Fruit,Spices & Condiments
+Beaten+Rice,Others & Processed Goods
+Bengal+Gram+Dal+(Chana+Dal),Pulses & Legumes
+Black+Gram+Dal+(Urd+Dal),Pulses & Legumes
+Green+Gram+Dal+(Moong+Dal),Pulses & Legumes
+Coconut+Oil,Others & Processed Goods
+Ground+Nut+Oil,Others & Processed Goods
+Ground+Nut+Seed,Nuts & Oilseeds
+Avare+Dal,Pulses & Legumes
+Castor+Oil,Others & Processed Goods
+Sajje,Cereals & Grains
+Butter,Animal Husbandry & Products
+Dalda,Others & Processed Goods
+Balekai,Vegetables
+Gingelly+Oil,Others & Processed Goods
+Season+Leaves,Vegetables
+Dry+Grapes,Fruits
+Gurellu,Vegetables
+Lint,Commercial & Plantation Crops
+Alasande+Gram,Pulses & Legumes
+Ram,Animal Husbandry & Products
+She+Goat,Animal Husbandry & Products
+Bullar,Animal Husbandry & Products
+Sunflower+Seed,Nuts & Oilseeds
+Soji,Others & Processed Goods
+Wheat+Atta,Others & Processed Goods
+Maida+Atta,Others & Processed Goods
+Bran,Others & Processed Goods
+Sabu+Dana,Others & Processed Goods
+Broken+Rice,Others & Processed Goods
+Gramflour,Others & Processed Goods
+Chennangi+Dal,Pulses & Legumes
+Elephant+Yam+(Suran),Vegetables
+Yam+(Ratalu),Vegetables
+French+Beans+(Frasbean),Vegetables
+Indian+Beans+(Seam),Vegetables
+Surat+Beans+(Papadi),Vegetables
+Pegeon+Pea+(Arhar+Fali),Vegetables
+Little+gourd+(Kundru),Vegetables
+Pointed+gourd+(Parval),Vegetables
+Long+Melon(Kakri),Vegetables
+Kartali+(Kantola),Vegetables
+Round+gourd,Vegetables
+Rat+Tail+Radish+(Mogari),Vegetables
+Peas+cod,Vegetables
+Turmeric+(raw),Spices & Condiments
+Lemon,Fruits
+Sponge+gourd,Vegetables
+Groundnut+pods+(raw),Nuts & Oilseeds
+Papaya+(Raw),Fruits
+Groundnut+(Split),Nuts & Oilseeds
+Coca,Commercial & Plantation Crops
+Cinamon(Dalchini),Spices & Condiments
+Kacholam,Spices & Condiments
+Colacasia,Vegetables
+Broomstick(Flower+Broom),Flowers & Ornamentals
+Bay+leaf+(Tejpatta),Spices & Condiments
+Resinwood,Others & Processed Goods
+Torchwood,Others & Processed Goods
+Mustard+Oil,Others & Processed Goods
+Almond(Badam),Nuts & Oilseeds
+Apricot(Jardalu%2fKhumani),Fruits
+Persimon(Japani+Fal),Fruits
+Cherry,Fruits
+Plum,Fruits
+Pear(Marasebu),Fruits
+Peach,Fruits
+Squash(Chappal+Kadoo),Vegetables
+Mahua,Others & Processed Goods
+Kinnow,Fruits
+Lukad,Vegetables
+Saffron,Spices & Condiments
+Lotus+Sticks,Flowers & Ornamentals
+Mashrooms,Vegetables
+Turnip,Vegetables
+Spinach,Vegetables
+Walnut,Nuts & Oilseeds
+Indian+Colza(Sarson),Nuts & Oilseeds
+Dry+Fodder,Animal Husbandry & Products
+Green+Fodder,Animal Husbandry & Products
+Peas(Dry),Pulses & Legumes
+Wool,Animal Husbandry & Products
+Tinda,Vegetables
+Galgal(Lemon),Fruits
+Litchi,Fruits
+Custard+Apple+(Sharifa),Fruits
+Goat+Hair,Animal Husbandry & Products
+Camel+Hair,Animal Husbandry & Products
+Amla(Nelli+Kai),Fruits
+Ber(Zizyphus%2fBorehannu),Fruits
+Onion+Green,Vegetables
+Gram+Raw(Chholia),Vegetables
+Mint(Pudina),Vegetables
+Egypian+Clover(Barseem),Animal Husbandry & Products
+Kabuli+Chana(Chickpeas-White),Pulses & Legumes
+Gladiolus+Cut+Flower,Flowers & Ornamentals
+Gladiolus+Bulb,Flowers & Ornamentals
+Flower+Broom,Flowers & Ornamentals
+Fish,Animal Husbandry & Products
+Egg,Animal Husbandry & Products
+Cock,Animal Husbandry & Products
+Hen,Animal Husbandry & Products
+Duck,Animal Husbandry & Products
+Mahua+Seed(Hippe+seed),Nuts & Oilseeds
+Khoya,Animal Husbandry & Products
+Rose(Tata),Flowers & Ornamentals
+Rose(Local),Flowers & Ornamentals
+Carnation,Flowers & Ornamentals
+Jarbara,Flowers & Ornamentals
+Tube+Rose(Single),Flowers & Ornamentals
+Lilly,Flowers & Ornamentals
+Anthorium,Flowers & Ornamentals
+BOP,Flowers & Ornamentals
+Orchid,Flowers & Ornamentals
+Daila(Chandni),Flowers & Ornamentals
+Tube+Rose(Double),Flowers & Ornamentals
+Chrysanthemum,Flowers & Ornamentals
+Lotus,Flowers & Ornamentals
+Patti+Calcutta,Flowers & Ornamentals
+Marigold(loose),Flowers & Ornamentals
+Jaffri,Flowers & Ornamentals
+Marget,Flowers & Ornamentals
+Tube+Rose(Loose),Flowers & Ornamentals
+Raibel,Flowers & Ornamentals
+Delha,Flowers & Ornamentals
+Mahedi,Flowers & Ornamentals
+White+Peas,Pulses & Legumes
+Guar+Seed(Cluster+Beans+Seed),Nuts & Oilseeds
+Paddy(Dhan)(Basmati),Cereals & Grains
+Urea,Fertilizers & Soil
+DAP (Diammonium Phosphate),Fertilizers & Soil
+NPK Fertilizer,Fertilizers & Soil
+SSP (Single Super Phosphate),Fertilizers & Soil
+MOP (Muriate of Potash),Fertilizers & Soil
+Vermicompost,Fertilizers & Soil
+Cow Dung Manure,Fertilizers & Soil
+Compost,Fertilizers & Soil
+Bone Meal,Fertilizers & Soil
+Fish Meal,Fertilizers & Soil
+Gypsum,Fertilizers & Soil
+Lime (Agricultural Lime),Fertilizers & Soil
+Vermiculite,Fertilizers & Soil
+Perlite,Fertilizers & Soil
+Peat Moss,Fertilizers & Soil
+Cocopeat,Fertilizers & Soil
+Insecticides,Crop Protection
+Fungicides,Crop Protection
+Herbicides,Crop Protection
+Neem Oil,Crop Protection
+Diatomaceous Earth,Crop Protection
+Trichoderma Viride,Crop Protection
+Pheromone Traps,Crop Protection
+Sticky Traps,Crop Protection
+Spade,Farming Tools
+Shovel,Farming Tools
+Hoe,Farming Tools
+Rake,Farming Tools
+Sickle,Farming Tools
+Scythe,Farming Tools
+Pruning Shears,Farming Tools
+Weeder,Farming Tools
+Khurpi,Farming Tools
+Brush Cutter,Farming Tools
+Chainsaw,Farming Tools
+Power Tiller,Farming Tools
+Water Pump,Farming Tools
+Sprayer (Knapsack),Farming Tools
+Sprayer (Battery-operated),Farming Tools
+Sprayer (Foot-operated),Farming Tools
+Grass Cutter,Farming Tools
+Drip Irrigation Pipes,Irrigation Equipment
+Drip Irrigation Kits,Irrigation Equipment
+Sprinklers,Irrigation Equipment
+Hose Pipes,Irrigation Equipment
+PVC Pipes,Irrigation Equipment
+Cattle Feed,Animal Feed & Health
+Chicken/Poultry/Chicken Feed,Animal Feed & Health
+Groundnut Cake,Animal Feed & Health
+Mineral Mixtures,Animal Feed & Health
+Dewormers,Animal Feed & Health
+Vaccines,Animal Feed & Health
+Fodder Seeds,Animal Feed & Health
+Certified Seeds,Seeds & Saplings
+Hybrid Seeds,Seeds & Saplings
+Open Pollinated Seeds (Desi),Seeds & Saplings
+Fruit Tree Saplings,Seeds & Saplings
+Seed Treatment Chemicals,Seeds & Saplings
+Gunny Bags (Jute Bags),Post-Harvest Supplies
+Plastic Crates,Post-Harvest Supplies
+Storage Bins,Post-Harvest Supplies
+Packaging Material,Post-Harvest Supplies
+
+Tractor,Farming Machinery & Implements
+Rotavator,Farming Machinery & Implements
+Cultivator,Farming Machinery & Implements
+Seed Drill,Farming Machinery & Implements
+Harvester,Farming Machinery & Implements
+Thresher,Farming Machinery & Implements
+Plough,Farming Machinery & Implements
+Harrow,Farming Machinery & Implements
+Tractor Trailer,Farming Machinery & Implements
+Tractor Tyres,Farming Machinery & Parts
+Tractor Spare Parts,Farming Machinery & Parts
+Engine Oil & Lubricants,Farming Machinery & Parts
+Pesticide Spray Nozzles,Crop Protection
+Protective Suit (PPE),Crop Protection
+Safety Gloves,Crop Protection
+Safety Goggles,Crop Protection
+Dust Mask,Crop Protection
+Wheelbarrow,Farming Tools
+Pickaxe,Farming Tools
+Axe,Farming Tools
+Measuring Can,Farming Tools
+Water Tank,Irrigation Equipment
+Water Storage Drum,Irrigation Equipment
+Filter Unit (for Drip),Irrigation Equipment
+Fertilizer Tank (for Drip),Irrigation Equipment
+Mulching Film,Irrigation Equipment
+Greenhouse Shade Net,Structures & Equipment
+Greenhouse Polyfilm,Structures & Equipment
+Greenhouse Framework,Structures & Equipment
+Poultry/Chicken Drinkers,Animal Husbandry
+Poultry/Chicken Feeders,Animal Husbandry
+Nest Box,Animal Husbandry
+Milking Machine,Animal Husbandry
+Fish Feed,Animal Feed & Health
+Shrimp Feed,Animal Feed & Health
+Aquaculture Aeration Pump,Animal Husbandry
+Fish Net,Animal Husbandry
+Beehive with Frame,Animal Husbandry
+Bee Suit,Animal Husbandry
+Queen Bee,Animal Husbandry
+Flower Seeds,Seeds & Saplings
+Lawn Grass Seeds,Seeds & Saplings
+Medicinal Plant Seeds,Seeds & Saplings
+Vermi Bed,Sensors
+Earthworms (for Vermicompost),Animal Husbandry
+Biozyme,Sensors
+Mycorrhiza,Sensors
+Azotobacter,Sensors
+Azospirillum,Sensors
+PSB (Phosphate Solubilising Bacteria),Sensors
+Jute Twine,Post-Harvest Supplies
+Zip Ties,Post-Harvest Supplies
+Weighing Scale,Sensors
+Moisture Meter,Sensors
+PH Meter,Sensors
+EC Meter,Sensors
+Soil Testing Kit,Sensors
+Organic Plant Growth Promoter,Sensors
+Seaweed Extract,Sensors
+Humic Acid,Sensors
+Fulvic Acid,Sensors
