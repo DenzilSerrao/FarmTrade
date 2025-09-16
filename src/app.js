@@ -14,6 +14,7 @@ import profileRoutes from './routes/profileRoutes.js';
 import supportRoutes from './routes/supportRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
 import { verifyToken } from './middlewares/auth.middleware.js';
 import mongoose from 'mongoose';
 import connectDB from './config/db.js'; // Import the database connection
@@ -97,6 +98,7 @@ app.get('/health', (req, res) => {
 
 // Public routes (no authentication required)
 app.use('/api/auth', authRoutes);
+app.use('/api', categoryRoutes);
 
 // Protected routes (authentication required)
 app.use('/api/dashboard', verifyToken, dashboardRoutes);

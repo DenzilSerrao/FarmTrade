@@ -1,4 +1,7 @@
 import axios from 'axios';
+import Order from '../models/Order.js';
+import Item from '../models/Item.js';
+import User from '../models/User.js';
 
 class DashboardService {
   constructor() {
@@ -93,80 +96,130 @@ class DashboardService {
   }
 
   // Enhanced sales analytics with more detailed data
-  async getSalesAnalytics(userId, timeRange = 'year') {
+  async getSalesAnalytics(userId, timeRange = '30d') {
     try {
-      // TODO: Replace with actual database query
-      // Example: const analytics = await Sale.aggregate([...complex aggregation pipeline...]);
+      const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 365;
+      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-      const baseData = {
-        totalSales: 125000,
-        totalRevenue: 2500000,
-        topCrop: 'Wheat',
-        topCropSales: 45000,
-        averageSalePrice: 20,
-        totalTransactions: 156,
-        monthlyTrends: [
-          { month: 'Jan', sales: 8000, revenue: 160000, transactions: 12 },
-          { month: 'Feb', sales: 12000, revenue: 240000, transactions: 18 },
-          { month: 'Mar', sales: 15000, revenue: 300000, transactions: 22 },
-          { month: 'Apr', sales: 18000, revenue: 360000, transactions: 25 },
-          { month: 'May', sales: 22000, revenue: 440000, transactions: 28 },
-          { month: 'Jun', sales: 20000, revenue: 400000, transactions: 24 },
-          { month: 'Jul', sales: 16000, revenue: 320000, transactions: 20 },
-          { month: 'Aug', sales: 14000, revenue: 280000, transactions: 17 },
-        ],
-        cropBreakdown: [
-          { crop: 'Wheat', sales: 45000, percentage: 36 },
-          { crop: 'Rice', sales: 35000, percentage: 28 },
-          { crop: 'Corn', sales: 25000, percentage: 20 },
-          { crop: 'Soybeans', sales: 20000, percentage: 16 },
-        ],
-        recentSales: [
-          {
-            id: 1,
-            crop: 'Wheat',
-            quantity: 500,
-            price: 25,
-            total: 12500,
-            buyer: 'ABC Grain Mills',
-            date: '2025-08-28',
+      // Get sales data from orders
+      const salesData = await Order.aggregate([
+        {
+          $match: {
+            sellerId: userId,
+            status: { $in: ['delivered', 'shipped'] },
+            createdAt: { $gte: startDate },
           },
-          {
-            id: 2,
-            crop: 'Rice',
-            quantity: 300,
-            price: 30,
-            total: 9000,
-            buyer: 'City Food Distributors',
-            date: '2025-08-27',
+        },
+        {
+          $group: {
+            _id: null,
+            totalSales: { $sum: '$quantity' },
+            totalRevenue: { $sum: '$totalPrice' },
+            totalTransactions: { $sum: 1 },
+            averageSalePrice: { $avg: '$pricePerUnit' },
           },
-        ],
+        },
+      ]);
+
+      // Get crop breakdown
+      const cropBreakdown = await Order.aggregate([
+        {
+          $match: {
+            sellerId: userId,
+            status: { $in: ['delivered', 'shipped'] },
+            createdAt: { $gte: startDate },
+          },
+        },
+        {
+          $group: {
+            _id: '$productName',
+            sales: { $sum: '$quantity' },
+            revenue: { $sum: '$totalPrice' },
+          },
+        },
+        { $sort: { revenue: -1 } },
+        { $limit: 5 },
+      ]);
+
+      // Get monthly trends
+      const monthlyTrends = await Order.aggregate([
+        {
+          $match: {
+            sellerId: userId,
+            status: { $in: ['delivered', 'shipped'] },
+            createdAt: { $gte: startDate },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: '$createdAt' },
+              month: { $month: '$createdAt' },
+            },
+            sales: { $sum: '$quantity' },
+            revenue: { $sum: '$totalPrice' },
+            transactions: { $sum: 1 },
+          },
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1 } },
+      ]);
+
+      // Get recent sales
+      const recentSales = await Order.find({
+        sellerId: userId,
+        status: { $in: ['delivered', 'shipped'] },
+      })
+        .populate('buyerId', 'name')
+        .sort({ createdAt: -1 })
+        .limit(5);
+
+      const analytics = salesData[0] || {
+        totalSales: 0,
+        totalRevenue: 0,
+        totalTransactions: 0,
+        averageSalePrice: 0,
       };
 
-      // Adjust data based on time range
-      if (timeRange === 'month') {
-        return {
-          ...baseData,
-          totalSales: Math.floor(baseData.totalSales / 12),
-          totalRevenue: Math.floor(baseData.totalRevenue / 12),
-          monthlyTrends: baseData.monthlyTrends.slice(-1), // Only current month
-        };
-      }
+      // Calculate total for percentages
+      const totalCropRevenue = cropBreakdown.reduce(
+        (sum, crop) => sum + crop.revenue,
+        0
+      );
 
-      if (timeRange === 'quarter') {
-        return {
-          ...baseData,
-          totalSales: Math.floor(baseData.totalSales / 4),
-          totalRevenue: Math.floor(baseData.totalRevenue / 4),
-          monthlyTrends: baseData.monthlyTrends.slice(-3), // Last 3 months
-        };
-      }
-
-      return baseData;
+      return {
+        ...analytics,
+        topCrop: cropBreakdown[0]?.name || 'No sales yet',
+        topCropSales: cropBreakdown[0]?.sales || 0,
+        monthlyTrends: monthlyTrends.map((trend) => ({
+          month: new Date(
+            trend._id.year,
+            trend._id.month - 1
+          ).toLocaleDateString('en', { month: 'short' }),
+          sales: trend.sales,
+          revenue: trend.revenue,
+          transactions: trend.transactions,
+        })),
+        cropBreakdown: cropBreakdown.map((crop) => ({
+          crop: crop._id,
+          sales: crop.sales,
+          revenue: crop.revenue,
+          percentage:
+            totalCropRevenue > 0
+              ? Math.round((crop.revenue / totalCropRevenue) * 100)
+              : 0,
+        })),
+        recentSales: recentSales.map((sale) => ({
+          id: sale._id,
+          crop: sale.productName,
+          quantity: sale.quantity,
+          price: sale.pricePerUnit,
+          total: sale.totalPrice,
+          buyer: sale.buyerId.name,
+          date: sale.createdAt.toISOString().split('T')[0],
+        })),
+      };
     } catch (error) {
       console.error('Error fetching sales analytics:', error);
-
-      // Return fallback data
       return {
         totalSales: 0,
         totalRevenue: 0,
@@ -179,6 +232,111 @@ class DashboardService {
         recentSales: [],
         error: 'Unable to fetch analytics data',
       };
+    }
+  }
+
+  // Get dashboard summary with real data
+  async getDashboardSummary(userId) {
+    try {
+      const [userStats, orderStats, itemStats] = await Promise.all([
+        User.findById(userId).select('name rating totalTrades verified'),
+        Order.aggregate([
+          {
+            $match: {
+              $or: [{ buyerId: userId }, { sellerId: userId }],
+            },
+          },
+          {
+            $group: {
+              _id: '$status',
+              count: { $sum: 1 },
+            },
+          },
+        ]),
+        Item.aggregate([
+          {
+            $match: { ownerId: userId },
+          },
+          {
+            $group: {
+              _id: null,
+              totalItems: { $sum: 1 },
+              totalValue: { $sum: { $multiply: ['$quantity', '$price'] } },
+              lowStockItems: {
+                $sum: {
+                  $cond: [{ $lte: ['$quantity', '$lowStockThreshold'] }, 1, 0],
+                },
+              },
+            },
+          },
+        ]),
+      ]);
+
+      const orderStatusCounts = orderStats.reduce((acc, stat) => {
+        acc[stat._id] = stat.count;
+        return acc;
+      }, {});
+
+      const itemSummary = itemStats[0] || {
+        totalItems: 0,
+        totalValue: 0,
+        lowStockItems: 0,
+      };
+
+      return {
+        user: userStats,
+        orders: {
+          total: Object.values(orderStatusCounts).reduce(
+            (sum, count) => sum + count,
+            0
+          ),
+          pending: orderStatusCounts.pending || 0,
+          accepted: orderStatusCounts.accepted || 0,
+          shipped: orderStatusCounts.shipped || 0,
+          delivered: orderStatusCounts.delivered || 0,
+        },
+        inventory: itemSummary,
+        alerts: {
+          lowStock: itemSummary.lowStockItems,
+          expiringSoon: 0, // TODO: Calculate expiring items
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching dashboard summary:', error);
+      return {
+        user: null,
+        orders: { total: 0, pending: 0, accepted: 0, shipped: 0, delivered: 0 },
+        inventory: { totalItems: 0, totalValue: 0, lowStockItems: 0 },
+        alerts: { lowStock: 0, expiringSoon: 0 },
+        error: 'Unable to fetch dashboard data',
+      };
+
+      //   if (timeRange === 'quarter') {
+      //     return {
+      //       ...baseData,
+      //       totalSales: Math.floor(baseData.totalSales / 4),
+      //       totalRevenue: Math.floor(baseData.totalRevenue / 4),
+      //       monthlyTrends: baseData.monthlyTrends.slice(-3), // Last 3 months
+      //     };
+      //   }
+
+      //   return baseData;
+      // } catch (error) {
+      //   console.error('Error fetching sales analytics:', error);
+
+      //   // Return fallback data
+      //   return {
+      //     totalSales: 0,
+      //     totalRevenue: 0,
+      //     topCrop: 'No data',
+      //     topCropSales: 0,
+      //     averageSalePrice: 0,
+      //     totalTransactions: 0,
+      //     monthlyTrends: [],
+      //     cropBreakdown: [],
+      //     recentSales: [],
+      //     error: 'Unable to fetch analytics data',
+      //   };
     }
   }
 
