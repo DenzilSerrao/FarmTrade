@@ -13,6 +13,8 @@
     |-- README.txt
 |-- app
     |-- (tabs)
+        |-- cart.tsx
+        |-- chat.tsx
         |-- community.tsx
         |-- index.tsx
         |-- orders.tsx
@@ -20,6 +22,7 @@
         |-- shelf.tsx
         |-- _layout.tsx
     |-- +not-found.tsx
+    |-- addresses.tsx
     |-- auth
         |-- email-sent.tsx
         |-- forgot-password.tsx
@@ -29,10 +32,14 @@
         |-- verify-email.tsx
         |-- verify-success.tsx
         |-- _layout.tsx
+    |-- chat
+        |-- [id].tsx
+    |-- checkout.tsx
     |-- index.tsx
     |-- onboarding
         |-- index.tsx
         |-- _layout.tsx
+    |-- payment.tsx
     |-- _layout.tsx
 |-- app.config.js
 |-- app.config.production.js
@@ -79,6 +86,7 @@
     |-- api.ts
     |-- auth.ts
     |-- axios.ts
+    |-- cart.ts
     |-- config.ts
     |-- constants.ts
     |-- validation.ts
@@ -87,6 +95,7 @@
 |-- package-lock.json
 |-- package.json
 |-- project.sln
+|-- report.txt
 |-- server
     |-- .env
     |-- .env.example
@@ -107,9 +116,12 @@
             |-- images.config.js
             |-- passport.js
         |-- controllers
+            |-- addressController.js
             |-- authController.js
+            |-- chatController.js
             |-- dashboardController.js
             |-- ordersController.js
+            |-- paymentController.js
             |-- profileController.js
             |-- shelfController.js
             |-- supportController.js
@@ -118,16 +130,21 @@
             |-- verifyAdmin.ts
             |-- verifyUser.ts
         |-- models
+            |-- Address.js
             |-- Admin.js
+            |-- Chat.js
             |-- Item.js
             |-- Message.js
             |-- Notification.js
             |-- Order.js
+            |-- Payment.js
             |-- User.js
         |-- routes
             |-- authRoutes.js
+            |-- chatRoutes.js
             |-- dashboardRoutes.js
             |-- ordersRoutes.js
+            |-- paymentRoutes.js
             |-- profileRoutes.js
             |-- shelfRoutes.js
             |-- supportRoutes.js
@@ -151,6 +168,7 @@
 |-- tsconfig.json
 |-- types
     |-- index.ts
+    |-- payment.ts
 |-- utils
     |-- constants.ts
 |-- vercel.json

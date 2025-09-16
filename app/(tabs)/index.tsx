@@ -114,26 +114,6 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
-
-      {/* Bottom Navigation Bar */}
-      <View className="flex-row justify-around items-center h-16 bg-white border-t border-gray-200">
-        <TouchableOpacity className="items-center">
-          <Home size={24} color="#22C55E" />
-          <Text className="text-xs font-medium text-green-500 mt-1">Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="items-center">
-          <Compass size={24} color="#9CA3AF" />
-          <Text className="text-xs font-medium text-gray-400 mt-1">Explore</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="items-center">
-          <ShoppingCart size={24} color="#9CA3AF" />
-          <Text className="text-xs font-medium text-gray-400 mt-1">Cart</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="items-center">
-          <User size={24} color="#9CA3AF" />
-          <Text className="text-xs font-medium text-gray-400 mt-1">Profile</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
