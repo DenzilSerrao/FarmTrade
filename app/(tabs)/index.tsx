@@ -8,17 +8,7 @@ import {
   TextInput,
   Image,
 } from 'react-native';
-import {
-  Bell,
-  Search,
-  Filter,
-  Heart,
-  Star,
-  Home,
-  Compass,
-  ShoppingCart,
-  User,
-} from 'lucide-react-native';
+import { Bell, Search, Filter, Heart, Star, Chrome as Home, Compass, ShoppingCart, User } from 'lucide-react-native';
 import { getShelfItems } from '@/lib/api';
 import { router } from 'expo-router';
 
