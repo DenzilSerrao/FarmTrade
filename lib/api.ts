@@ -215,6 +215,59 @@ export const getShelfAnalytics = async () => {
   return response.data;
 };
 
+// ==================== PAYMENT & CART ENDPOINTS ====================
+export const createPaymentOrder = async (orderData: any) => {
+  const response = await api.post('/payment/create-order', orderData);
+  return response.data;
+};
+
+export const verifyPayment = async (paymentData: any) => {
+  const response = await api.post('/payment/verify', paymentData);
+  return response.data;
+};
+
+// ==================== ADDRESS ENDPOINTS ====================
+export const getSavedAddresses = async () => {
+  const response = await api.get('/profile/addresses');
+  return response.data;
+};
+
+export const createAddress = async (addressData: any) => {
+  const response = await api.post('/profile/addresses', addressData);
+  return response.data;
+};
+
+export const updateAddress = async (addressId: string, addressData: any) => {
+  const response = await api.put(`/profile/addresses/${addressId}`, addressData);
+  return response.data;
+};
+
+export const deleteAddress = async (addressId: string) => {
+  const response = await api.delete(`/profile/addresses/${addressId}`);
+  return response.data;
+};
+
+// ==================== CHAT ENDPOINTS ====================
+export const getConversations = async () => {
+  const response = await api.get('/chat/conversations');
+  return response.data;
+};
+
+export const getChatMessages = async (conversationId: string) => {
+  const response = await api.get(`/chat/conversations/${conversationId}/messages`);
+  return response.data;
+};
+
+export const sendMessage = async (messageData: any) => {
+  const response = await api.post('/chat/messages', messageData);
+  return response.data;
+};
+
+export const createConversation = async (participantId: string) => {
+  const response = await api.post('/chat/conversations', { participantId });
+  return response.data;
+};
+
 // ==================== SUPPORT ENDPOINTS ====================
 export const getFAQs = async () => {
   const response = await api.get('/support/faqs');

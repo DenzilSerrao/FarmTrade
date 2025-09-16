@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Chrome as Home, Package, ShoppingCart, User, MessageCircle } from 'lucide-react-native';
+import { Chrome as Home, Package, ShoppingCart, User, MessageCircle, ShoppingBag } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -41,6 +41,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="cart"
+        options={{
+          title: 'Cart',
+          tabBarIcon: ({ size, color }) => (
+            <ShoppingBag size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="orders"
         options={{
           title: 'Orders',
@@ -50,9 +59,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="community"
+        name="chat"
         options={{
-          title: 'Community',
+          title: 'Chat',
           tabBarIcon: ({ size, color }) => (
             <MessageCircle size={size} color={color} />
           ),

@@ -12,6 +12,8 @@ import ordersRoutes from './routes/ordersRoutes.js';
 import shelfRoutes from './routes/shelfRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import supportRoutes from './routes/supportRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 import { verifyToken } from './middlewares/auth.middleware.js';
 import mongoose from 'mongoose';
 import connectDB from './config/db.js'; // Import the database connection
@@ -102,6 +104,8 @@ app.use('/api/orders', verifyToken, ordersRoutes);
 app.use('/api/shelf', verifyToken, shelfRoutes);
 app.use('/api/profile', verifyToken, profileRoutes);
 app.use('/api/support', verifyToken, supportRoutes);
+app.use('/api/payment', paymentRoutes); // Some routes don't need auth (callbacks)
+app.use('/api/chat', verifyToken, chatRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
