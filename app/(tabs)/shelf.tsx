@@ -13,33 +13,62 @@ import { router } from 'expo-router';
 import { Plus, TriangleAlert, Package, Calendar, CreditCard, Trash2, Eye } from 'lucide-react-native';
 import { getShelfItems, deleteShelfItem, getShelfAnalytics } from '@/lib/api';
 
+interface ShelfItemImage {
+  filename: string;
+  originalName: string;
+  variants: {
+    thumbnail: { filename: string; url: string };
+    medium: { filename: string; url: string };
+    large: { filename: string; url: string };
+    original: { filename: string; url: string };
+  };
+  alt: string;
+  isPrimary: boolean;
+  uploadedAt: string;
+}
+
 interface ShelfItem {
-    _id: string;
-    name: string;
-    quantity: number;
-    unit: string;
-    price: number;
-    expiryDate: string;
-    lowStock: boolean;
-    images: Array<{ uri: string; isPrimary: boolean }>;
-    category: string;
-    description?: string;
-    organic?: boolean;
-    qualityGrade?: string;
-  }
-  
-  interface ShelfAnalytics {
-    totalItems: number;
-    lowStockItems: number;
-    expiringItems: number;
-    totalValue: number;
-  }
-  
-  interface ApiResponse<T> {
-    success: boolean;
-    data?: T;
-    message?: string;
-  }
+  _id: string;
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  quantity: number;
+  unit: string;
+  minOrderQuantity: number;
+  lowStockThreshold: number;
+  images: ShelfItemImage[];
+  ownerId: string;
+  available: boolean;
+  organic: boolean;
+  harvestDate?: string;
+  expiryDate?: string;
+  location?: string;
+  qualityGrade: 'A' | 'B' | 'C';
+  tags: string[];
+  views: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  // Virtual fields from backend
+  lowStock?: boolean;
+  daysUntilExpiry?: number;
+}
+
+interface ShelfAnalytics {
+  totalItems: number;
+  lowStockItems: number;
+  expiringItems: number;
+  totalValue: number;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  items?: T; // Sometimes backend returns 'items' instead of 'data'
+  analytics?: T; // For analytics response
+  message?: string;
+}
 
 export default function ShelfScreen() {
   const [shelfItems, setShelfItems] = useState<ShelfItem[]>([]);
@@ -59,20 +88,20 @@ export default function ShelfScreen() {
   const loadShelfData = async () => {
     try {
       const [itemsResponse, analyticsResponse] = await Promise.all([
-        getShelfItems(),
-        getShelfAnalytics(),
+        getShelfItems() as unknown as Promise<ApiResponse<ShelfItem[]>>,
+        getShelfAnalytics() as Promise<ApiResponse<ShelfAnalytics>>,
       ]);
 
       // Handle items response
       if (itemsResponse.success) {
-        setShelfItems(itemsResponse.data || []);
+        setShelfItems(itemsResponse.data || itemsResponse.items || []);
       } else {
         Alert.alert('Error', itemsResponse.message || 'Failed to load shelf items');
       }
 
       // Handle analytics response
       if (analyticsResponse.success) {
-        setAnalytics(analyticsResponse.data);
+        setAnalytics(analyticsResponse.analytics || analyticsResponse.data || analytics);
       } else {
         console.warn('Failed to load analytics:', analyticsResponse.message);
       }
@@ -101,7 +130,7 @@ export default function ShelfScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const response = await deleteShelfItem(id);
+              const response = await deleteShelfItem(id) as ApiResponse<any>;
               if (response.success) {
                 setShelfItems(prev => prev.filter(item => item._id !== id));
                 // Refresh analytics
@@ -135,7 +164,7 @@ export default function ShelfScreen() {
         unit: item.unit,
         price: item.price.toString(),
         minOrderQuantity: item.minOrderQuantity?.toString() || '1',
-        organic: item.organic.toString(),
+        organic: item.organic?.toString() || 'false',
         expiryDate: item.expiryDate || '',
         qualityGrade: item.qualityGrade || 'B',
       }
@@ -144,9 +173,24 @@ export default function ShelfScreen() {
 
   const handleViewItem = (item: ShelfItem) => {
     router.push({
-      pathname: '../product/item-details.tsx',
+      pathname: '/product/item-details', // Fixed path
       params: { itemId: item._id }
     });
+  };
+
+  // Helper function to get image URL
+  const getImageUrl = (item: ShelfItem): string => {
+    const primaryImage = item.images?.find(img => img.isPrimary);
+    const firstImage = item.images?.[0];
+    
+    if (primaryImage?.variants?.medium?.url) {
+      return primaryImage.variants.medium.url;
+    }
+    if (firstImage?.variants?.medium?.url) {
+      return firstImage.variants.medium.url;
+    }
+    // Fallback image
+    return 'https://images.pexels.com/photos/568383/pexels-photo-568383.jpeg?auto=compress&cs=tinysrgb&w=200';
   };
 
   if (loading) {
@@ -238,11 +282,7 @@ export default function ShelfScreen() {
                 onPress={() => handleViewItem(item)}
               >
                 <Image 
-                  source={{ 
-                    uri: item.images?.find(img => img.isPrimary)?.url || 
-                         item.images?.[0]?.url || 
-                         'https://images.pexels.com/photos/568383/pexels-photo-568383.jpeg?auto=compress&cs=tinysrgb&w=200'
-                  }} 
+                  source={{ uri: getImageUrl(item) }} 
                   className="w-15 h-15 rounded-lg" 
                 />
                 
@@ -277,19 +317,28 @@ export default function ShelfScreen() {
                 <View className="flex-row gap-2">
                   <TouchableOpacity 
                     className="p-2"
-                    onPress={() => handleViewItem(item)}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleViewItem(item);
+                    }}
                   >
                     <Eye size={16} color="#6B7280" />
                   </TouchableOpacity>
                   <TouchableOpacity 
                     className="p-2"
-                    onPress={() => handleEditItem(item)}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleEditItem(item);
+                    }}
                   >
                     <CreditCard size={16} color="#6B7280" />
                   </TouchableOpacity>
                   <TouchableOpacity 
                     className="p-2"
-                    onPress={() => handleDeleteItem(item._id)}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleDeleteItem(item._id);
+                    }}
                   >
                     <Trash2 size={16} color="#EF4444" />
                   </TouchableOpacity>
