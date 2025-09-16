@@ -82,6 +82,34 @@ export const verifyEmail = async (token: string) => {
 export const getGoogleAuthUrl = () => `${Config.API_URL}/auth/google`;
 export const getFacebookAuthUrl = () => `${Config.API_URL}/auth/facebook`;
 
+// ==================== CATEGORY & CROPS ENDPOINTS ====================
+export const getCategories = async () => {
+  const response = await api.get('/categories');
+  return response.data;
+};
+
+export const getCropsByCategory = async (category: string) => {
+  const response = await api.get(`/categories/${encodeURIComponent(category)}/crops`);
+  return response.data;
+};
+
+export const searchCrops = async (query: string) => {
+  const response = await api.get(`/crops/search`, {
+    params: { q: query }
+  });
+  return response.data;
+};
+
+export const getAllCrops = async () => {
+  const response = await api.get('/crops');
+  return response.data;
+};
+
+export const getUnits = async () => {
+  const response = await api.get('/units');
+  return response.data;
+};
+
 // ==================== DASHBOARD ENDPOINTS ====================
 export const getNews = async () => {
   const response = await api.get('/dashboard/news');
@@ -196,6 +224,11 @@ export const updateShelfItem = async (itemId: string, itemData: any) => {
   return response.data;
 };
 
+export const toggleItemAvailability = async (itemId: string, available: boolean) => {
+  const response = await api.patch(`/shelf/${itemId}/availability`, { available });
+  return response.data;
+};
+
 export const deleteShelfItem = async (itemId: string) => {
   const response = await api.delete(`/shelf/${itemId}`);
   return response.data;
@@ -284,78 +317,5 @@ export const getContactInfo = async () => {
   const response = await api.get('/support/contact');
   return response.data;
 };
-
-// ==================== LEGACY/PAYMENT ENDPOINTS ====================
-// These appear to be from your original API but don't match your current routes
-// Keep them if you still need them, otherwise consider removing
-
-// export const fetchProducts = async (): Promise<ShelfItem[]> => {
-//   // This might map to getShelfItems now
-//   const response = await api.get('/shelfitems');
-//   return response.data.data.products;
-// };
-
-// export const createPaymentOrder = async (orderData: any) => {
-//   const paymentResponse = await api.post('/payment/create-order', orderData);
-//   return paymentResponse.data;
-// };
-
-// export const verifyPayment = async (paymentData: any) => {
-//   const response = await api.post('/payment/verify-payment', {
-//     ...paymentData,
-//     timestamp: Date.now()
-//   });
-//   console.log('verifyPayment:', response);
-//   return response.data;
-// };
-
-// Legacy admin endpoints - keep if you have admin routes not shown
-// export const getAllOrdersAdmin = async () => {
-//   const response = await api.get('/admin/allOrders');
-//   console.log('Getting all orders (admin):', response);
-//   return response.data;
-// };
-
-// export const getOrderAdmin = async (orderId: string) => {
-//   const response = await api.get(`/admin/orders/${orderId}`);
-//   return response.data;
-// };
-
-// export const deleteOrderAdmin = async (orderId: string) => {
-//   const response = await api.delete(`/admin/orders/${orderId}`);
-//   return response.data;
-// };
-
-// export const updateOrderStatus = async (orderId: string, status: string) => {
-//   const response = await api.patch(`/admin/orders/${orderId}`, { status });
-//   return response.data;
-// };
-
-// export const getOrderInvoiceAdmin = async (orderId: string, userId: string) => {
-//   const response = await api.get(`/orders/${orderId}/invoice`, {
-//     params: { userId },
-//     responseType: 'blob',
-//   });
-//   return response.data;
-// };
-
-// export const createProduct = async (productData: any) => {
-//   const response = await api.post('/products', productData);
-//   return response.data;
-// };
-
-// export const updateProduct = async (productId: string, productData: any) => {
-//   const response = await api.put(`/products/${productId}`, productData);
-//   return response.data;
-// };
-
-// export const uploadProductImage = async (formData: FormData) => {
-//   const response = await api.post('/products/upload', formData, {
-//     headers: {
-//       'Content-Type': 'multipart/form-data',
-//     },
-//   });
-//   return response.data;
-// };
 
 export default api;

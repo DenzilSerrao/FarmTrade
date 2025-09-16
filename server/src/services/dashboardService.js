@@ -181,25 +181,34 @@ class DashboardService {
       };
 
       // Calculate total for percentages
-      const totalCropRevenue = cropBreakdown.reduce((sum, crop) => sum + crop.revenue, 0);
+      const totalCropRevenue = cropBreakdown.reduce(
+        (sum, crop) => sum + crop.revenue,
+        0
+      );
 
       return {
         ...analytics,
         topCrop: cropBreakdown[0]?.name || 'No sales yet',
         topCropSales: cropBreakdown[0]?.sales || 0,
-        monthlyTrends: monthlyTrends.map(trend => ({
-          month: new Date(trend._id.year, trend._id.month - 1).toLocaleDateString('en', { month: 'short' }),
+        monthlyTrends: monthlyTrends.map((trend) => ({
+          month: new Date(
+            trend._id.year,
+            trend._id.month - 1
+          ).toLocaleDateString('en', { month: 'short' }),
           sales: trend.sales,
           revenue: trend.revenue,
           transactions: trend.transactions,
         })),
-        cropBreakdown: cropBreakdown.map(crop => ({
+        cropBreakdown: cropBreakdown.map((crop) => ({
           crop: crop._id,
           sales: crop.sales,
           revenue: crop.revenue,
-          percentage: totalCropRevenue > 0 ? Math.round((crop.revenue / totalCropRevenue) * 100) : 0,
+          percentage:
+            totalCropRevenue > 0
+              ? Math.round((crop.revenue / totalCropRevenue) * 100)
+              : 0,
         })),
-        recentSales: recentSales.map(sale => ({
+        recentSales: recentSales.map((sale) => ({
           id: sale._id,
           crop: sale.productName,
           quantity: sale.quantity,
@@ -277,7 +286,10 @@ class DashboardService {
       return {
         user: userStats,
         orders: {
-          total: Object.values(orderStatusCounts).reduce((sum, count) => sum + count, 0),
+          total: Object.values(orderStatusCounts).reduce(
+            (sum, count) => sum + count,
+            0
+          ),
           pending: orderStatusCounts.pending || 0,
           accepted: orderStatusCounts.accepted || 0,
           shipped: orderStatusCounts.shipped || 0,
@@ -297,34 +309,34 @@ class DashboardService {
         inventory: { totalItems: 0, totalValue: 0, lowStockItems: 0 },
         alerts: { lowStock: 0, expiringSoon: 0 },
         error: 'Unable to fetch dashboard data',
-      }
-
-      if (timeRange === 'quarter') {
-        return {
-          ...baseData,
-          totalSales: Math.floor(baseData.totalSales / 4),
-          totalRevenue: Math.floor(baseData.totalRevenue / 4),
-          monthlyTrends: baseData.monthlyTrends.slice(-3), // Last 3 months
-        };
-      }
-
-      return baseData;
-    } catch (error) {
-      console.error('Error fetching sales analytics:', error);
-
-      // Return fallback data
-      return {
-        totalSales: 0,
-        totalRevenue: 0,
-        topCrop: 'No data',
-        topCropSales: 0,
-        averageSalePrice: 0,
-        totalTransactions: 0,
-        monthlyTrends: [],
-        cropBreakdown: [],
-        recentSales: [],
-        error: 'Unable to fetch analytics data',
       };
+
+      //   if (timeRange === 'quarter') {
+      //     return {
+      //       ...baseData,
+      //       totalSales: Math.floor(baseData.totalSales / 4),
+      //       totalRevenue: Math.floor(baseData.totalRevenue / 4),
+      //       monthlyTrends: baseData.monthlyTrends.slice(-3), // Last 3 months
+      //     };
+      //   }
+
+      //   return baseData;
+      // } catch (error) {
+      //   console.error('Error fetching sales analytics:', error);
+
+      //   // Return fallback data
+      //   return {
+      //     totalSales: 0,
+      //     totalRevenue: 0,
+      //     topCrop: 'No data',
+      //     topCropSales: 0,
+      //     averageSalePrice: 0,
+      //     totalTransactions: 0,
+      //     monthlyTrends: [],
+      //     cropBreakdown: [],
+      //     recentSales: [],
+      //     error: 'Unable to fetch analytics data',
+      //   };
     }
   }
 

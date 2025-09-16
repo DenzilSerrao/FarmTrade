@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   Image,
@@ -80,7 +79,7 @@ export default function CartScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View className="flex-1 justify-center items-center">
         <Text>Loading cart...</Text>
       </View>
     );
@@ -88,20 +87,22 @@ export default function CartScreen() {
 
   if (cartItems.length === 0) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Shopping Cart</Text>
+      <View className="flex-1 bg-gray-50">
+        <View className="px-6 pt-16 pb-5 bg-white">
+          <Text className="text-2xl font-bold text-gray-800">Shopping Cart</Text>
         </View>
         
-        <View style={styles.emptyContainer}>
+        <View className="flex-1 justify-center items-center px-6">
           <ShoppingBag size={64} color="#D1D5DB" />
-          <Text style={styles.emptyTitle}>Your cart is empty</Text>
-          <Text style={styles.emptySubtitle}>Add some fresh produce to get started</Text>
+          <Text className="text-xl font-semibold text-gray-800 mt-4">Your cart is empty</Text>
+          <Text className="text-sm text-gray-500 text-center mt-2">
+            Add some fresh produce to get started
+          </Text>
           <TouchableOpacity 
-            style={styles.shopButton}
+            className="bg-green-500 px-6 py-3 rounded-lg mt-6"
             onPress={() => router.push('/(tabs)/shelf')}
           >
-            <Text style={styles.shopButtonText}>Start Shopping</Text>
+            <Text className="text-white text-base font-semibold">Start Shopping</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -109,60 +110,64 @@ export default function CartScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Shopping Cart</Text>
-        <Text style={styles.subtitle}>{cartItems.length} items</Text>
+    <View className="flex-1 bg-gray-50">
+      {/* Header */}
+      <View className="px-6 pt-16 pb-5 bg-white">
+        <Text className="text-2xl font-bold text-gray-800">Shopping Cart</Text>
+        <Text className="text-sm text-gray-500 mt-0.5">{cartItems.length} items</Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      {/* Cart Items */}
+      <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
         {cartItems.map((item) => (
-          <View key={item.id} style={styles.cartItem}>
+          <View key={item.id} className="bg-white rounded-xl p-4 mt-4 flex-row border border-gray-200">
             <Image 
               source={{ uri: item.image || 'https://images.pexels.com/photos/1300972/pexels-photo-1300972.jpeg?auto=compress&cs=tinysrgb&w=200' }}
-              style={styles.itemImage}
+              className="w-20 h-20 rounded-lg"
             />
             
-            <View style={styles.itemDetails}>
-              <Text style={styles.itemName}>{item.productName}</Text>
-              <Text style={styles.sellerName}>by {item.sellerName}</Text>
-              <Text style={styles.sellerLocation}>{item.sellerLocation}</Text>
+            <View className="flex-1 ml-3">
+              <Text className="text-base font-semibold text-gray-800">{item.productName}</Text>
+              <Text className="text-xs text-gray-500 mt-0.5">by {item.sellerName}</Text>
+              <Text className="text-xs text-gray-400 mt-0.5">{item.sellerLocation}</Text>
               
-              <View style={styles.priceContainer}>
-                <Text style={styles.itemPrice}>₹{item.pricePerUnit}/{item.unit}</Text>
-                <Text style={styles.totalPrice}>₹{item.totalPrice}</Text>
+              <View className="flex-row justify-between items-center mt-2">
+                <Text className="text-sm text-gray-500">₹{item.pricePerUnit}/{item.unit}</Text>
+                <Text className="text-base font-bold text-green-500">₹{item.totalPrice}</Text>
               </View>
 
-              <View style={styles.deliveryInfo}>
-                <Text style={styles.deliveryMode}>
+              <View className="flex-row justify-between mt-2">
+                <Text className="text-xs text-blue-500">
                   {item.deliveryMode === 'delivery' ? '🚚 Delivery' : '📦 Pickup'}
                 </Text>
-                <Text style={styles.estimatedDelivery}>
+                <Text className="text-xs text-gray-500">
                   Est: {item.estimatedDelivery}
                 </Text>
               </View>
             </View>
 
-            <View style={styles.itemActions}>
+            <View className="items-end justify-between">
               <TouchableOpacity
-                style={styles.removeButton}
+                className="p-1"
                 onPress={() => removeItem(item.id)}
               >
                 <Trash2 size={18} color="#EF4444" />
               </TouchableOpacity>
 
-              <View style={styles.quantityContainer}>
+              <View className="flex-row items-center bg-gray-100 rounded-md">
                 <TouchableOpacity
-                  style={styles.quantityButton}
+                  className="p-2"
                   onPress={() => updateQuantity(item.id, item.quantity - 1)}
                 >
                   <Minus size={16} color="#6B7280" />
                 </TouchableOpacity>
                 
-                <Text style={styles.quantity}>{item.quantity}</Text>
+                <Text className="text-base font-semibold text-gray-800 min-w-[30px] text-center">
+                  {item.quantity}
+                </Text>
                 
                 <TouchableOpacity
-                  style={styles.quantityButton}
+                  className="p-2"
                   onPress={() => updateQuantity(item.id, item.quantity + 1)}
                 >
                   <Plus size={16} color="#6B7280" />
@@ -173,204 +178,25 @@ export default function CartScreen() {
         ))}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <View style={styles.summaryContainer}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Subtotal ({cartItems.length} items)</Text>
-            <Text style={styles.summaryValue}>₹{subtotal}</Text>
+      {/* Footer */}
+      <View className="bg-white px-6 py-5 border-t border-gray-200">
+        <View className="mb-4">
+          <View className="flex-row justify-between items-center">
+            <Text className="text-base text-gray-500">
+              Subtotal ({cartItems.length} items)
+            </Text>
+            <Text className="text-lg font-bold text-gray-800">₹{subtotal}</Text>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.checkoutButton} onPress={proceedToCheckout}>
-          <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
+        <TouchableOpacity 
+          className="bg-green-500 flex-row items-center justify-center py-4 rounded-xl gap-2"
+          onPress={proceedToCheckout}
+        >
+          <Text className="text-white text-base font-semibold">Proceed to Checkout</Text>
           <ArrowRight size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#FFFFFF',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 2,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginTop: 16,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  shopButton: {
-    backgroundColor: '#22C55E',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 24,
-  },
-  shopButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  cartItem: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  itemImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-  },
-  itemDetails: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  itemName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  sellerName: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 2,
-  },
-  sellerLocation: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    marginTop: 1,
-  },
-  priceContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  itemPrice: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  totalPrice: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#22C55E',
-  },
-  deliveryInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  deliveryMode: {
-    fontSize: 12,
-    color: '#3B82F6',
-  },
-  estimatedDelivery: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  itemActions: {
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-  },
-  removeButton: {
-    padding: 4,
-  },
-  quantityContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 6,
-    padding: 4,
-  },
-  quantityButton: {
-    padding: 8,
-  },
-  quantity: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    minWidth: 30,
-    textAlign: 'center',
-  },
-  footer: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  summaryContainer: {
-    marginBottom: 16,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    fontSize: 16,
-    color: '#6B7280',
-  },
-  summaryValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  checkoutButton: {
-    backgroundColor: '#22C55E',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  checkoutButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

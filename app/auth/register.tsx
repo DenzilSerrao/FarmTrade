@@ -47,6 +47,7 @@ export default function CreateAccountScreen() {
         setLoading(true);
 
         try {
+            console.log('Registering user:', formData);
             const response = await register(formData.name, formData.email, formData.password);
 
             if (response.success) {

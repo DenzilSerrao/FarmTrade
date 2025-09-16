@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -11,12 +10,52 @@ import {
 import { Bell, Search, Filter, Heart, Star, Chrome as Home, Compass, ShoppingCart, User } from 'lucide-react-native';
 import { getShelfItems } from '@/lib/api';
 import { router } from 'expo-router';
+import { ShelfItem } from '@/types'; // Import the ShelfItem type
+
+// Extended interface for the product data structure used in the API
+interface ProductItem extends Omit<ShelfItem, 'id'> {
+  _id?: string;
+  id?: string;
+  name: string;
+  price: number;
+  unit: string;
+  quantity: number;
+  harvestDate?: string;
+  description?: string;
+  primaryImage?: {
+    urls?: {
+      medium?: string;
+    };
+  };
+  ownerId?: {
+    name?: string;
+    rating?: number;
+    totalTrades?: number;
+  };
+  organic?: boolean;
+}
+
+// API Response interface
+interface ApiResponse {
+  success: boolean;
+  data: {
+    items: ProductItem[];
+  };
+}
+
+// Type for search filters
+type SearchFilters = {
+  closestToMe: boolean;
+  cheapest: boolean;
+  highStock: boolean;
+  fresh: boolean;
+};
 
 export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchFilters, setSearchFilters] = useState({
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     closestToMe: false,
     cheapest: true,
     highStock: false,
@@ -36,7 +75,7 @@ export default function HomeScreen() {
 
   const loadFeaturedProducts = async () => {
     try {
-      const response = await getShelfItems();
+      const response = await getShelfItems() as unknown as ApiResponse;
       if (response.success) {
         let products = response.data.items || [];
         
@@ -46,13 +85,15 @@ export default function HomeScreen() {
         }
         
         if (searchFilters.highStock) {
-          products = products.filter(item => item.quantity > 50);
+          products = products.filter((item) => item.quantity > 50);
         }
         
         if (searchFilters.fresh) {
           const threeDaysAgo = new Date();
           threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-          products = products.filter(item => new Date(item.harvestDate) >= threeDaysAgo);
+          products = products.filter((item) => 
+            item.harvestDate && new Date(item.harvestDate) >= threeDaysAgo
+          );
         }
         
         // Take first 8 items for featured section
@@ -73,14 +114,14 @@ export default function HomeScreen() {
 
     try {
       // Implement search with filters
-      const response = await getShelfItems();
+      const response = await getShelfItems() as unknown as ApiResponse;
       if (response.success) {
         let products = response.data.items || [];
         
         // Filter by search query
-        products = products.filter(item =>
+        products = products.filter((item) =>
           item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.description.toLowerCase().includes(searchQuery.toLowerCase())
+          (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()))
         );
         
         // Apply other filters
@@ -95,7 +136,7 @@ export default function HomeScreen() {
     }
   };
 
-  const toggleFilter = (filterKey: string) => {
+  const toggleFilter = (filterKey: keyof SearchFilters) => {
     setSearchFilters(prev => ({
       ...prev,
       [filterKey]: !prev[filterKey],
@@ -134,22 +175,22 @@ export default function HomeScreen() {
         {/* Search Bar */}
         <View className="mx-6 my-4">
           <View className="flex-row items-center justify-between px-4 py-2 border border-gray-300 rounded-full">
-          <Search size={20} color="#9CA3AF" />
-          <TextInput
-            className="flex-1 ml-2 text-base text-gray-800"
-            placeholder="Search.."
-            placeholderTextColor="#9ca3af"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={handleSearch}
-          />
-          <TouchableOpacity 
-            className="bg-green-500 w-10 h-10 rounded-full items-center justify-center ml-2"
-            onPress={handleSearch}
-          >
-            <Filter size={20} color="white" />
-          </TouchableOpacity>
-        </View>
+            <Search size={20} color="#9CA3AF" />
+            <TextInput
+              className="flex-1 ml-2 text-base text-gray-800"
+              placeholder="Search.."
+              placeholderTextColor="#9ca3af"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSubmitEditing={handleSearch}
+            />
+            <TouchableOpacity 
+              className="bg-green-500 w-10 h-10 rounded-full items-center justify-center ml-2"
+              onPress={handleSearch}
+            >
+              <Filter size={20} color="white" />
+            </TouchableOpacity>
+          </View>
           
           {/* Search Filters */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-6">
@@ -179,6 +220,15 @@ export default function HomeScreen() {
                 High stock
               </Text>
             </TouchableOpacity>
+            
+            <TouchableOpacity
+              className={`mr-3 px-4 py-2 rounded-full border ${searchFilters.fresh ? 'bg-green-100 border-green-500' : 'bg-white border-gray-300'}`}
+              onPress={() => toggleFilter('fresh')}
+            >
+              <Text className={`text-sm ${searchFilters.fresh ? 'text-green-700' : 'text-gray-600'}`}>
+                Fresh
+              </Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
 
@@ -201,7 +251,7 @@ export default function HomeScreen() {
                 key={product._id || product.id} 
                 className="w-[48%] mb-6 bg-white rounded-lg border border-gray-200 shadow-sm"
                 onPress={() => router.push({
-                  pathname: '/product/[id]',
+                  pathname: '/product/[id]' as any,
                   params: { id: product._id || product.id }
                 })}
               >
@@ -233,7 +283,6 @@ export default function HomeScreen() {
               </TouchableOpacity>
             ))}
           </View>
-        )}
         </View>
       </ScrollView>
     </View>

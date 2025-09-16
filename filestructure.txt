@@ -22,6 +22,7 @@
         |-- shelf.tsx
         |-- _layout.tsx
     |-- +not-found.tsx
+    |-- add-item.tsx
     |-- addresses.tsx
     |-- auth
         |-- email-sent.tsx
@@ -39,7 +40,12 @@
     |-- onboarding
         |-- index.tsx
         |-- _layout.tsx
+    |-- order
+        |-- [productId].tsx
     |-- payment.tsx
+    |-- product
+        |-- item-details.tsx
+        |-- [id].tsx
     |-- _layout.tsx
 |-- app.config.js
 |-- app.config.production.js
@@ -141,6 +147,7 @@
             |-- User.js
         |-- routes
             |-- authRoutes.js
+            |-- categoryRoutes.js
             |-- chatRoutes.js
             |-- dashboardRoutes.js
             |-- ordersRoutes.js
@@ -148,8 +155,11 @@
             |-- profileRoutes.js
             |-- shelfRoutes.js
             |-- supportRoutes.js
+        |-- scripts
+            |-- seedDatabase.js
         |-- services
             |-- authService.js
+            |-- categoryService.js
             |-- dashboardService.js
             |-- emailService.js
             |-- orderService.js

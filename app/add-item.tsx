@@ -2,18 +2,25 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   TextInput,
   Alert,
   Modal,
   Image,
+  ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Camera, X, Check, ChevronDown, Search } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { addShelfItem } from '@/lib/api';
+import { 
+  addShelfItem, 
+  updateShelfItem, 
+  getCategories, 
+  getCropsByCategory, 
+  searchCrops, 
+  getUnits 
+} from '@/lib/api';
 
 interface Category {
   name: string;
@@ -30,19 +37,23 @@ interface Unit {
 }
 
 export default function AddItemScreen() {
+  const { editMode, itemId, name, description, category, price, quantity, unit, minOrderQuantity, lowStockThreshold, organic, harvestDate, expiryDate, qualityGrade } = useLocalSearchParams();
+  
+  const isEditMode = editMode === 'true';
+
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    category: '',
-    price: '',
-    quantity: '',
-    unit: 'kg',
-    minOrderQuantity: '1',
-    lowStockThreshold: '',
-    organic: false,
-    harvestDate: '',
-    expiryDate: '',
-    qualityGrade: 'B',
+    name: isEditMode ? (name as string) : '',
+    description: isEditMode ? (description as string) : '',
+    category: isEditMode ? (category as string) : '',
+    price: isEditMode ? (price as string) : '',
+    quantity: isEditMode ? (quantity as string) : '',
+    unit: isEditMode ? (unit as string) : 'kg',
+    minOrderQuantity: isEditMode ? (minOrderQuantity as string) : '1',
+    lowStockThreshold: isEditMode ? (lowStockThreshold as string) : '',
+    organic: isEditMode ? (organic === 'true') : false,
+    harvestDate: isEditMode ? (harvestDate as string) : '',
+    expiryDate: isEditMode ? (expiryDate as string) : '',
+    qualityGrade: isEditMode ? (qualityGrade as string) : 'B',
     customCropName: '',
   });
 
@@ -52,6 +63,11 @@ export default function AddItemScreen() {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   
+  // Loading states for modals
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [loadingCrops, setLoadingCrops] = useState(false);
+  const [loadingUnits, setLoadingUnits] = useState(false);
+  
   // Modal states
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showCropModal, setShowCropModal] = useState(false);
@@ -60,20 +76,24 @@ export default function AddItemScreen() {
 
   useEffect(() => {
     loadInitialData();
+    
+    // If in edit mode and category is set, load crops for that category
+    if (isEditMode && formData.category) {
+      loadCropsForCategory(formData.category);
+    }
   }, []);
 
   const loadInitialData = async () => {
     try {
-      const [categoriesRes, unitsRes] = await Promise.all([
-        fetch(`${process.env.EXPO_PUBLIC_API_URL}/categories`),
-        fetch(`${process.env.EXPO_PUBLIC_API_URL}/units`),
+      const [categoriesData, unitsData] = await Promise.all([
+        getCategories(),
+        getUnits(),
       ]);
 
-      const categoriesData = await categoriesRes.json();
-      const unitsData = await unitsRes.json();
-
       if (categoriesData.success) {
-        setCategories(categoriesData.data);
+        // Always include "Other" option at the end
+        const categoriesWithOther = [...categoriesData.data, 'Other'];
+        setCategories(categoriesWithOther);
       }
 
       if (unitsData.success) {
@@ -81,6 +101,7 @@ export default function AddItemScreen() {
       }
     } catch (error) {
       console.error('Error loading initial data:', error);
+      Alert.alert('Error', 'Failed to load categories and units');
     }
   };
 
@@ -90,33 +111,43 @@ export default function AddItemScreen() {
       return;
     }
 
+    setLoadingCrops(true);
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/categories/${encodeURIComponent(category)}/crops`);
-      const data = await response.json();
-
-      if (data.success) {
-        setCrops(data.data);
+      const response = await getCropsByCategory(category);
+      if (response.success) {
+        setCrops(response.data);
       }
     } catch (error) {
       console.error('Error loading crops:', error);
+      Alert.alert('Error', 'Failed to load crops for this category');
+    } finally {
+      setLoadingCrops(false);
     }
   };
 
-  const searchCrops = async (query: string) => {
+  const handleSearchCrops = async (query: string) => {
+    setCropSearch(query);
+    
     if (!query || query.length < 2) {
-      setCrops([]);
+      // If no search query, load crops for current category
+      if (formData.category && formData.category !== 'Other') {
+        loadCropsForCategory(formData.category);
+      } else {
+        setCrops([]);
+      }
       return;
     }
 
+    setLoadingCrops(true);
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/crops/search?q=${encodeURIComponent(query)}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setCrops(data.data);
+      const response = await searchCrops(query);
+      if (response.success) {
+        setCrops(response.data);
       }
     } catch (error) {
       console.error('Error searching crops:', error);
+    } finally {
+      setLoadingCrops(false);
     }
   };
 
@@ -144,6 +175,7 @@ export default function AddItemScreen() {
   const handleCategorySelect = (category: string) => {
     setFormData(prev => ({ ...prev, category, name: '' }));
     setShowCategoryModal(false);
+    setCropSearch('');
     loadCropsForCategory(category);
   };
 
@@ -165,6 +197,20 @@ export default function AddItemScreen() {
       }));
       setShowCropModal(false);
       setCropSearch('');
+    }
+  };
+
+  const loadUnitsData = async () => {
+    setLoadingUnits(true);
+    try {
+      const response = await getUnits();
+      if (response.success) {
+        setUnits(response.data);
+      }
+    } catch (error) {
+      console.error('Error loading units:', error);
+    } finally {
+      setLoadingUnits(false);
     }
   };
 
@@ -208,18 +254,23 @@ export default function AddItemScreen() {
         })),
       };
 
-      const response = await addShelfItem(itemData);
+      let response;
+      if (isEditMode) {
+        response = await updateShelfItem(itemId as string, itemData);
+      } else {
+        response = await addShelfItem(itemData);
+      }
 
       if (response.success) {
-        Alert.alert('Success', 'Item added to shelf successfully!', [
+        Alert.alert('Success', isEditMode ? 'Item updated successfully!' : 'Item added to shelf successfully!', [
           { text: 'OK', onPress: () => router.back() }
         ]);
       } else {
-        Alert.alert('Error', response.message || 'Failed to add item');
+        Alert.alert('Error', response.message || `Failed to ${isEditMode ? 'update' : 'add'} item`);
       }
     } catch (error) {
-      console.error('Error adding item:', error);
-      Alert.alert('Error', 'Failed to add item to shelf');
+      console.error(`Error ${isEditMode ? 'updating' : 'adding'} item:`, error);
+      Alert.alert('Error', `Failed to ${isEditMode ? 'update' : 'add'} item to shelf`);
     } finally {
       setLoading(false);
     }
@@ -230,54 +281,65 @@ export default function AddItemScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+    <View className="flex-1 bg-gray-50">
+      {/* Header */}
+      <View className="flex-row items-center px-4 pt-16 pb-4 bg-white border-b border-gray-200">
+        <TouchableOpacity onPress={() => router.back()} className="p-2">
           <ArrowLeft size={24} color="#1F2937" />
         </TouchableOpacity>
-        <Text style={styles.title}>Add New Item</Text>
-        <View style={styles.headerRight} />
+        <Text className="flex-1 text-lg font-semibold text-gray-800 text-center">
+          {isEditMode ? 'Edit Item' : 'Add New Item'}
+        </Text>
+        <View className="w-10" />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
         {/* Images Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Product Images</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageContainer}>
+        <View className="mt-6">
+          <Text className="text-base font-semibold text-gray-800">Product Images</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-2">
             {images.map((uri, index) => (
-              <View key={index} style={styles.imageWrapper}>
-                <Image source={{ uri }} style={styles.productImage} />
+              <View key={index} className="relative mr-3">
+                <Image source={{ uri }} className="w-20 h-20 rounded-lg" />
                 <TouchableOpacity
-                  style={styles.removeImageButton}
+                  className="absolute -top-2 -right-2 bg-red-500 rounded-full w-6 h-6 items-center justify-center"
                   onPress={() => removeImage(index)}
                 >
                   <X size={16} color="#FFFFFF" />
                 </TouchableOpacity>
                 {index === 0 && (
-                  <View style={styles.primaryBadge}>
-                    <Text style={styles.primaryText}>Primary</Text>
+                  <View className="absolute bottom-1 left-1 bg-green-500 px-1.5 py-0.5 rounded">
+                    <Text className="text-xs text-white font-semibold">Primary</Text>
                   </View>
                 )}
               </View>
             ))}
             
             {images.length < 5 && (
-              <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+              <TouchableOpacity 
+                className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 items-center justify-center"
+                onPress={pickImage}
+              >
                 <Camera size={24} color="#6B7280" />
-                <Text style={styles.addImageText}>Add Photo</Text>
+                <Text className="text-xs text-gray-500 mt-1">Add Photo</Text>
               </TouchableOpacity>
             )}
           </ScrollView>
         </View>
 
         {/* Category Selection */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Category *</Text>
+        <View className="mt-6">
+          <Text className="text-base font-semibold text-gray-800">Category *</Text>
           <TouchableOpacity
-            style={styles.dropdown}
-            onPress={() => setShowCategoryModal(true)}
+            className="flex-row items-center justify-between bg-white rounded-lg p-3 mt-2 border border-gray-200"
+            onPress={() => {
+              setShowCategoryModal(true);
+              setLoadingCategories(true);
+              // Simulate loading delay for categories
+              setTimeout(() => setLoadingCategories(false), 500);
+            }}
           >
-            <Text style={[styles.dropdownText, !formData.category && styles.placeholder]}>
+            <Text className={`text-base ${!formData.category ? 'text-gray-400' : 'text-gray-800'}`}>
               {formData.category || 'Select category'}
             </Text>
             <ChevronDown size={20} color="#6B7280" />
@@ -285,21 +347,21 @@ export default function AddItemScreen() {
         </View>
 
         {/* Crop Name */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Crop Name *</Text>
+        <View className="mt-6">
+          <Text className="text-base font-semibold text-gray-800">Crop Name *</Text>
           {formData.category && formData.category !== 'Other' ? (
             <TouchableOpacity
-              style={styles.dropdown}
+              className="flex-row items-center justify-between bg-white rounded-lg p-3 mt-2 border border-gray-200"
               onPress={() => setShowCropModal(true)}
             >
-              <Text style={[styles.dropdownText, !formData.name && styles.placeholder]}>
+              <Text className={`text-base ${!formData.name ? 'text-gray-400' : 'text-gray-800'}`}>
                 {formData.name || 'Select or search crop'}
               </Text>
               <Search size={20} color="#6B7280" />
             </TouchableOpacity>
           ) : (
             <TextInput
-              style={styles.input}
+              className="bg-white rounded-lg p-3 mt-2 border border-gray-200 text-base text-gray-800"
               placeholder="Enter crop name"
               value={formData.name}
               onChangeText={(value) => setFormData(prev => ({ ...prev, name: value }))}
@@ -308,24 +370,25 @@ export default function AddItemScreen() {
         </View>
 
         {/* Description */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Description</Text>
+        <View className="mt-6">
+          <Text className="text-base font-semibold text-gray-800">Description</Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
+            className="bg-white rounded-lg p-3 mt-2 border border-gray-200 text-base text-gray-800 h-20"
             placeholder="Describe your product (quality, farming method, etc.)"
             value={formData.description}
             onChangeText={(value) => setFormData(prev => ({ ...prev, description: value }))}
             multiline
             numberOfLines={3}
+            textAlignVertical="top"
           />
         </View>
 
         {/* Price and Quantity Row */}
-        <View style={styles.rowSection}>
-          <View style={styles.halfWidth}>
-            <Text style={styles.sectionTitle}>Price per {formData.unit} *</Text>
+        <View className="flex-row mt-6 gap-3">
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-gray-800">Price per {formData.unit} *</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded-lg p-3 mt-2 border border-gray-200 text-base text-gray-800"
               placeholder="0"
               value={formData.price}
               onChangeText={(value) => setFormData(prev => ({ ...prev, price: value }))}
@@ -333,10 +396,10 @@ export default function AddItemScreen() {
             />
           </View>
           
-          <View style={styles.halfWidth}>
-            <Text style={styles.sectionTitle}>Quantity *</Text>
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-gray-800">Quantity *</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded-lg p-3 mt-2 border border-gray-200 text-base text-gray-800"
               placeholder="0"
               value={formData.quantity}
               onChangeText={(value) => setFormData(prev => ({ ...prev, quantity: value }))}
@@ -346,13 +409,18 @@ export default function AddItemScreen() {
         </View>
 
         {/* Unit Selection */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Unit *</Text>
+        <View className="mt-6">
+          <Text className="text-base font-semibold text-gray-800">Unit *</Text>
           <TouchableOpacity
-            style={styles.dropdown}
-            onPress={() => setShowUnitModal(true)}
+            className="flex-row items-center justify-between bg-white rounded-lg p-3 mt-2 border border-gray-200"
+            onPress={() => {
+              setShowUnitModal(true);
+              if (units.length === 0) {
+                loadUnitsData();
+              }
+            }}
           >
-            <Text style={styles.dropdownText}>
+            <Text className="text-base text-gray-800">
               {units.find(u => u.value === formData.unit)?.label || formData.unit}
             </Text>
             <ChevronDown size={20} color="#6B7280" />
@@ -360,11 +428,11 @@ export default function AddItemScreen() {
         </View>
 
         {/* Additional Details */}
-        <View style={styles.rowSection}>
-          <View style={styles.halfWidth}>
-            <Text style={styles.sectionTitle}>Min Order Qty</Text>
+        <View className="flex-row mt-6 gap-3">
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-gray-800">Min Order Qty</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded-lg p-3 mt-2 border border-gray-200 text-base text-gray-800"
               placeholder="1"
               value={formData.minOrderQuantity}
               onChangeText={(value) => setFormData(prev => ({ ...prev, minOrderQuantity: value }))}
@@ -372,10 +440,10 @@ export default function AddItemScreen() {
             />
           </View>
           
-          <View style={styles.halfWidth}>
-            <Text style={styles.sectionTitle}>Low Stock Alert</Text>
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-gray-800">Low Stock Alert</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded-lg p-3 mt-2 border border-gray-200 text-base text-gray-800"
               placeholder="Auto"
               value={formData.lowStockThreshold}
               onChangeText={(value) => setFormData(prev => ({ ...prev, lowStockThreshold: value }))}
@@ -385,23 +453,23 @@ export default function AddItemScreen() {
         </View>
 
         {/* Quality and Organic */}
-        <View style={styles.rowSection}>
-          <View style={styles.halfWidth}>
-            <Text style={styles.sectionTitle}>Quality Grade</Text>
-            <View style={styles.gradeContainer}>
+        <View className="flex-row mt-6 gap-3">
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-gray-800">Quality Grade</Text>
+            <View className="flex-row gap-2 mt-2">
               {['A', 'B', 'C'].map(grade => (
                 <TouchableOpacity
                   key={grade}
-                  style={[
-                    styles.gradeButton,
-                    formData.qualityGrade === grade && styles.selectedGrade,
-                  ]}
+                  className={`flex-1 items-center py-3 rounded-lg border ${
+                    formData.qualityGrade === grade 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-200 bg-white'
+                  }`}
                   onPress={() => setFormData(prev => ({ ...prev, qualityGrade: grade }))}
                 >
-                  <Text style={[
-                    styles.gradeText,
-                    formData.qualityGrade === grade && styles.selectedGradeText,
-                  ]}>
+                  <Text className={`text-base font-semibold ${
+                    formData.qualityGrade === grade ? 'text-green-600' : 'text-gray-500'
+                  }`}>
                     {grade}
                   </Text>
                 </TouchableOpacity>
@@ -409,16 +477,20 @@ export default function AddItemScreen() {
             </View>
           </View>
 
-          <View style={styles.halfWidth}>
-            <Text style={styles.sectionTitle}>Organic</Text>
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-gray-800">Organic</Text>
             <TouchableOpacity
-              style={styles.organicToggle}
+              className="flex-row items-center mt-5"
               onPress={() => setFormData(prev => ({ ...prev, organic: !prev.organic }))}
             >
-              <View style={[styles.toggleTrack, formData.organic && styles.toggleTrackActive]}>
-                <View style={[styles.toggleThumb, formData.organic && styles.toggleThumbActive]} />
+              <View className={`w-12 h-6 rounded-full justify-center ${
+                formData.organic ? 'bg-green-500' : 'bg-gray-300'
+                              }`}>
+                <View className={`w-5 h-5 rounded-full bg-white ${
+                  formData.organic ? 'ml-6' : 'ml-1'
+                }`} />
               </View>
-              <Text style={styles.organicText}>
+              <Text className="text-sm text-gray-800 ml-3">
                 {formData.organic ? 'Organic' : 'Conventional'}
               </Text>
             </TouchableOpacity>
@@ -426,21 +498,21 @@ export default function AddItemScreen() {
         </View>
 
         {/* Dates */}
-        <View style={styles.rowSection}>
-          <View style={styles.halfWidth}>
-            <Text style={styles.sectionTitle}>Harvest Date</Text>
+        <View className="flex-row mt-6 gap-3">
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-gray-800">Harvest Date</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded-lg p-3 mt-2 border border-gray-200 text-base text-gray-800"
               placeholder="YYYY-MM-DD"
               value={formData.harvestDate}
               onChangeText={(value) => setFormData(prev => ({ ...prev, harvestDate: value }))}
             />
           </View>
           
-          <View style={styles.halfWidth}>
-            <Text style={styles.sectionTitle}>Expiry Date</Text>
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-gray-800">Expiry Date</Text>
             <TextInput
-              style={styles.input}
+              className="bg-white rounded-lg p-3 mt-2 border border-gray-200 text-base text-gray-800"
               placeholder="YYYY-MM-DD"
               value={formData.expiryDate}
               onChangeText={(value) => setFormData(prev => ({ ...prev, expiryDate: value }))}
@@ -449,437 +521,164 @@ export default function AddItemScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.submitButton, loading && styles.disabledButton]}
+          className={`rounded-xl py-4 items-center mt-8 mb-10 ${
+            loading ? 'bg-gray-400' : 'bg-green-500'
+          }`}
           onPress={handleSubmit}
           disabled={loading}
         >
-          <Text style={styles.submitButtonText}>
-            {loading ? 'Adding Item...' : 'Add to Shelf'}
+          <Text className="text-white text-base font-semibold">
+            {loading ? (isEditMode ? 'Updating...' : 'Adding...') : (isEditMode ? 'Update Item' : 'Add to Shelf')}
           </Text>
         </TouchableOpacity>
       </ScrollView>
 
       {/* Category Modal */}
       <Modal visible={showCategoryModal} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Category</Text>
+        <View className="flex-1 bg-white">
+          <View className="flex-row justify-between items-center px-6 pt-16 pb-5 border-b border-gray-200">
+            <Text className="text-xl font-bold text-gray-800">Select Category</Text>
             <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
               <X size={24} color="#6B7280" />
             </TouchableOpacity>
           </View>
           
-          <ScrollView style={styles.modalContent}>
-            {categories.map((category) => (
-              <TouchableOpacity
-                key={category}
-                style={styles.modalOption}
-                onPress={() => handleCategorySelect(category)}
-              >
-                <Text style={styles.modalOptionText}>{category}</Text>
-                {formData.category === category && (
-                  <Check size={20} color="#22C55E" />
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          {loadingCategories ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#22C55E" />
+              <Text className="text-gray-500 mt-2">Loading categories...</Text>
+            </View>
+          ) : (
+            <ScrollView className="flex-1 px-6">
+              {categories.map((category) => (
+                <TouchableOpacity
+                  key={category}
+                  className="flex-row justify-between items-center py-4 border-b border-gray-100"
+                  onPress={() => handleCategorySelect(category)}
+                >
+                  <Text className="text-base text-gray-800">{category}</Text>
+                  {formData.category === category && (
+                    <Check size={20} color="#22C55E" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
       </Modal>
 
       {/* Crop Modal */}
       <Modal visible={showCropModal} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Crop</Text>
+        <View className="flex-1 bg-white">
+          <View className="flex-row justify-between items-center px-6 pt-16 pb-5 border-b border-gray-200">
+            <Text className="text-xl font-bold text-gray-800">Select Crop</Text>
             <TouchableOpacity onPress={() => setShowCropModal(false)}>
               <X size={24} color="#6B7280" />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.searchContainer}>
+          <View className="flex-row items-center bg-gray-50 rounded-lg px-4 py-3 mx-6 my-4 border border-gray-200">
             <Search size={20} color="#9CA3AF" />
             <TextInput
-              style={styles.searchInput}
+              className="flex-1 ml-3 text-base text-gray-800"
               placeholder="Search crops..."
               value={cropSearch}
-              onChangeText={(value) => {
-                setCropSearch(value);
-                searchCrops(value);
-              }}
+              onChangeText={handleSearchCrops}
             />
           </View>
 
-          <ScrollView style={styles.modalContent}>
+          <ScrollView className="flex-1 px-6">
             {/* Custom crop option */}
-            <View style={styles.customCropSection}>
-              <Text style={styles.customCropLabel}>Or enter custom crop name:</Text>
-              <View style={styles.customCropContainer}>
+            <View className="bg-gray-50 p-4 rounded-lg mb-4">
+              <Text className="text-sm font-semibold text-gray-800 mb-2">Or enter custom crop name:</Text>
+              <View className="flex-row gap-2">
                 <TextInput
-                  style={styles.customCropInput}
+                  className="flex-1 bg-white rounded px-3 py-2 border border-gray-200 text-sm"
                   placeholder="Enter crop name"
                   value={formData.customCropName}
                   onChangeText={(value) => setFormData(prev => ({ ...prev, customCropName: value }))}
                 />
                 <TouchableOpacity
-                  style={styles.customCropButton}
+                  className="bg-green-500 px-4 py-2 rounded justify-center"
                   onPress={handleCustomCrop}
                   disabled={!formData.customCropName.trim()}
                 >
-                  <Text style={styles.customCropButtonText}>Use</Text>
+                  <Text className="text-white text-sm font-semibold">Use</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {filteredCrops.map((crop, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.modalOption}
-                onPress={() => handleCropSelect(crop)}
-              >
-                <View>
-                  <Text style={styles.modalOptionText}>{crop.name}</Text>
-                  <Text style={styles.modalOptionSubtext}>{crop.category}</Text>
-                </View>
-                {formData.name === crop.name && (
-                  <Check size={20} color="#22C55E" />
+            {loadingCrops ? (
+              <View className="flex-1 justify-center items-center py-10">
+                <ActivityIndicator size="large" color="#22C55E" />
+                <Text className="text-gray-500 mt-2">Loading crops...</Text>
+              </View>
+            ) : (
+              <>
+                {filteredCrops.length === 0 && cropSearch.length >= 2 && (
+                  <View className="py-10 items-center">
+                    <Text className="text-gray-500">No crops found for "{cropSearch}"</Text>
+                    <Text className="text-gray-400 text-sm mt-1">Try using the custom crop option above</Text>
+                  </View>
                 )}
-              </TouchableOpacity>
-            ))}
+                
+                {filteredCrops.map((crop, index) => (
+                  <TouchableOpacity
+                    key={`${crop.name}-${index}`}
+                    className="flex-row justify-between items-center py-4 border-b border-gray-100"
+                    onPress={() => handleCropSelect(crop)}
+                  >
+                    <View>
+                      <Text className="text-base text-gray-800">{crop.name}</Text>
+                      <Text className="text-xs text-gray-500 mt-0.5">{crop.category}</Text>
+                    </View>
+                    {formData.name === crop.name && (
+                      <Check size={20} color="#22C55E" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
           </ScrollView>
         </View>
       </Modal>
 
       {/* Unit Modal */}
       <Modal visible={showUnitModal} animationType="slide" presentationStyle="pageSheet">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Unit</Text>
+        <View className="flex-1 bg-white">
+          <View className="flex-row justify-between items-center px-6 pt-16 pb-5 border-b border-gray-200">
+            <Text className="text-xl font-bold text-gray-800">Select Unit</Text>
             <TouchableOpacity onPress={() => setShowUnitModal(false)}>
               <X size={24} color="#6B7280" />
             </TouchableOpacity>
           </View>
           
-          <ScrollView style={styles.modalContent}>
-            {units.map((unit) => (
-              <TouchableOpacity
-                key={unit.value}
-                style={styles.modalOption}
-                onPress={() => {
-                  setFormData(prev => ({ ...prev, unit: unit.value }));
-                  setShowUnitModal(false);
-                }}
-              >
-                <Text style={styles.modalOptionText}>{unit.label}</Text>
-                {formData.unit === unit.value && (
-                  <Check size={20} color="#22C55E" />
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          {loadingUnits ? (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#22C55E" />
+              <Text className="text-gray-500 mt-2">Loading units...</Text>
+            </View>
+          ) : (
+            <ScrollView className="flex-1 px-6">
+              {units.map((unit) => (
+                <TouchableOpacity
+                  key={unit.value}
+                  className="flex-row justify-between items-center py-4 border-b border-gray-100"
+                  onPress={() => {
+                    setFormData(prev => ({ ...prev, unit: unit.value }));
+                    setShowUnitModal(false);
+                  }}
+                >
+                  <Text className="text-base text-gray-800">{unit.label}</Text>
+                  {formData.unit === unit.value && (
+                    <Check size={20} color="#22C55E" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
       </Modal>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  backButton: {
-    padding: 8,
-  },
-  title: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-    textAlign: 'center',
-  },
-  headerRight: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  section: {
-    marginTop: 24,
-  },
-  rowSection: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
-  },
-  halfWidth: {
-    flex: 1,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  dropdown: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  dropdownText: {
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  placeholder: {
-    color: '#9CA3AF',
-  },
-  imageContainer: {
-    flexDirection: 'row',
-    marginTop: 8,
-  },
-  imageWrapper: {
-    position: 'relative',
-    marginRight: 12,
-  },
-  productImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-  },
-  removeImageButton: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#EF4444',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryBadge: {
-    position: 'absolute',
-    bottom: 4,
-    left: 4,
-    backgroundColor: '#22C55E',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  primaryText: {
-    fontSize: 10,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  addImageButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#D1D5DB',
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addImageText: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 4,
-  },
-  gradeContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  gradeButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    alignItems: 'center',
-  },
-  selectedGrade: {
-    borderColor: '#22C55E',
-    backgroundColor: '#F0FDF4',
-  },
-  gradeText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  selectedGradeText: {
-    color: '#22C55E',
-  },
-  organicToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  toggleTrack: {
-    width: 48,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#D1D5DB',
-    justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  toggleTrackActive: {
-    backgroundColor: '#22C55E',
-  },
-  toggleThumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    alignSelf: 'flex-start',
-  },
-  toggleThumbActive: {
-    alignSelf: 'flex-end',
-  },
-  organicText: {
-    fontSize: 14,
-    color: '#1F2937',
-    marginLeft: 12,
-  },
-  submitButton: {
-    backgroundColor: '#22C55E',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 32,
-    marginBottom: 40,
-  },
-  disabledButton: {
-    backgroundColor: '#9CA3AF',
-  },
-  submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  modalContent: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  modalOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  modalOptionText: {
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  modalOptionSubtext: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 2,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    margin: 24,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  customCropSection: {
-    backgroundColor: '#F9FAFB',
-    padding: 16,
-    borderRadius: 8,
-    margin: 24,
-    marginBottom: 0,
-  },
-  customCropLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 8,
-  },
-  customCropContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  customCropInput: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    fontSize: 14,
-  },
-  customCropButton: {
-    backgroundColor: '#22C55E',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-    justifyContent: 'center',
-  },
-  customCropButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});

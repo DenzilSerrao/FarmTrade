@@ -145,7 +145,7 @@ export default function ProductDetailScreen() {
           
           {product.images && product.images.length > 1 && (
             <ScrollView horizontal style={styles.thumbnailContainer} showsHorizontalScrollIndicator={false}>
-              {product.images.map((image, index) => (
+              {product.images.map((image: { urls: { thumbnail: any; }; }, index: string | number | bigint | ((prevState: number) => number) | null | undefined) => (
                 <TouchableOpacity
                   key={index}
                   onPress={() => setSelectedImageIndex(index)}
